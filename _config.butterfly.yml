@@ -1,0 +1,265 @@
+# --------------------------------------
+# Butterfly Theme Configuration
+# Docs: https://butterfly.js.org/
+# --------------------------------------
+
+# Navigation
+nav:
+  logo:
+  display_title: true
+  display_post_title: true
+  fixed: true
+
+menu:
+  首页: / || fas fa-home
+  归档: /archives/ || fas fa-archive
+  标签: /tags/ || fas fa-tags
+  分类: /categories/ || fas fa-folder-open
+
+# Social media
+social:
+  fab fa-github: https://github.com/dxyang42 || Github || '#24292e'
+
+# Image Settings
+favicon: /img/favicon.ico
+
+avatar:
+  img: /img/butterfly-icon.png
+  effect: false
+
+disable_top_img: false
+
+# Default banner when page banner is not set
+default_top_img: https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=80
+
+# Home page banner
+index_img: https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=80
+
+# Other page banners
+archive_img:
+tag_img:
+category_img:
+
+footer_img: false
+background:
+
+cover:
+  index_enable: true
+  aside_enable: true
+  archives_enable: true
+  default_cover:
+    - https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80
+    - https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&q=80
+    - https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80
+
+error_img:
+  flink: /img/friend_404.gif
+  post_page: /img/404.jpg
+
+error_404:
+  enable: true
+  subtitle: 'Page Not Found'
+  background: /img/error-page.png
+
+post_meta:
+  page:
+    date_type: created
+    date_format: date
+    categories: true
+    tags: false
+    label: true
+  post:
+    position: left
+    date_type: both
+    date_format: date
+    categories: true
+    tags: true
+    label: true
+
+# Home page settings
+index_site_info_top:
+index_top_img_height:
+
+subtitle:
+  enable: true
+  effect: true
+  typed_option:
+  source: false
+  sub:
+    - 记录学习与思考
+    - 分享技术与生活
+
+index_layout: 3
+
+index_post_content:
+  method: 3
+  length: 500
+
+# Post Settings
+toc:
+  post: true
+  page: false
+  number: true
+  expand: false
+  style_simple: false
+  scroll_percent: true
+
+post_copyright:
+  enable: true
+  decode: false
+  author_href:
+  license: CC BY-NC-SA 4.0
+  license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+reward:
+  enable: false
+
+related_post:
+  enable: true
+  limit: 6
+  date_type: created
+
+post_pagination: 1
+
+noticeOutdate:
+  enable: false
+
+# Footer
+footer:
+  nav:
+  owner:
+    enable: true
+    since: 2026
+  copyright:
+    enable: true
+    version: true
+  custom_text:
+
+# Aside
+aside:
+  enable: true
+  hide: false
+  button: true
+  mobile: true
+  position: right
+  display:
+    archive: true
+    tag: true
+    category: true
+  card_author:
+    enable: true
+    description: 一个热爱技术的记录者
+    button:
+      enable: true
+      icon: fab fa-github
+      text: Follow Me
+      link: https://github.com/dxyang42
+  card_announcement:
+    enable: true
+    content: 欢迎来访，欢迎留言交流！
+  card_recent_post:
+    enable: true
+    limit: 5
+    sort: date
+    sort_order:
+  card_newest_comments:
+    enable: false
+  card_categories:
+    enable: true
+    limit: 8
+    expand: none
+    sort_order:
+  card_tags:
+    enable: true
+    limit: 40
+    color: false
+    custom_colors:
+    orderby: random
+    order: 1
+    sort_order:
+  card_archives:
+    enable: true
+    type: monthly
+    format: YYYY年MM月
+    order: -1
+    limit: 8
+    sort_order:
+  card_post_series:
+    enable: true
+    series_title: false
+    orderBy: 'date'
+    order: -1
+  card_webinfo:
+    enable: true
+    post_count: true
+    last_push_date: true
+    sort_order:
+    runtime_date:
+
+# Bottom right button
+rightside_bottom:
+
+translate:
+  enable: false
+
+readmode: true
+
+darkmode:
+  enable: true
+  button: true
+  autoChangeMode: false
+  start:
+  end:
+
+rightside_scroll_percent: true
+rightside_item_order:
+  enable: false
+  hide:
+  show:
+
+rightside_config_animation: true
+
+# Global Settings
+anchor:
+  auto_update: false
+  click_to_scroll: false
+
+photofigcaption: false
+
+copy:
+  enable: true
+  copyright:
+    enable: false
+    limit_count: 150
+
+wordcount:
+  enable: false
+
+busuanzi:
+  site_uv: true
+  site_pv: true
+  page_pv: true
+
+math:
+  use:
+  per_page: true
+  hide_scrollbar: false
+  mathjax:
+    enableMenu: true
+    tags: none
+  katex:
+    copy_tex: false
+
+search:
+  use:
+  placeholder:
+  algolia_search:
+    hitsPerPage: 6
+  local_search:
+    preload: false
+    top_n_per_article: 1
+    unescape: false
+    pagination:
+      enable: false
+      hitsPerPage: 8
+    CDN:
