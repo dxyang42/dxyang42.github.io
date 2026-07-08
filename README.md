@@ -183,6 +183,112 @@ social:
 
 ---
 
+## 管理导航菜单和文章层级
+
+### 顶部导航菜单（Tab）
+
+顶部导航在 `_config.butterfly.yml` 的 `menu` 区域配置：
+
+```yaml
+menu:
+  首页: / || fas fa-home
+  归档: /archives/ || fas fa-archive
+  标签: /tags/ || fas fa-tags
+  分类: /categories/ || fas fa-folder-open
+```
+
+格式说明：
+
+```yaml
+显示文字: 链接路径 || 图标类名
+```
+
+图标来自 [Font Awesome](https://fontawesome.com/icons)。
+
+#### 添加"关于"页面
+
+1. 创建页面：
+
+```bash
+npx hexo new page about
+```
+
+2. 在 `menu` 中加入：
+
+```yaml
+menu:
+  首页: / || fas fa-home
+  归档: /archives/ || fas fa-archive
+  标签: /tags/ || fas fa-tags
+  分类: /categories/ || fas fa-folder-open
+  关于: /about/ || fas fa-user
+```
+
+3. 编辑 `source/about/index.md` 添加内容，重启本地服务器即可看到新 Tab。
+
+### 文章层级管理
+
+Hexo 的文章统一放在 `source/_posts/` 目录下，层级主要通过两种方式管理。
+
+#### 方式一：Front-matter 分类和标签（推荐）
+
+每篇文章顶部配置：
+
+```markdown
+---
+title: Hexo 教程
+date: 2026-07-08 15:00:00
+categories:
+  - 技术
+  - Hexo
+tags:
+  - 博客
+  - 教程
+---
+```
+
+- `categories`：层级分类
+- `tags`：灵活标签
+
+配置后，点击顶部"分类"或"标签" Tab 即可查看层级结构。
+
+#### 方式二：物理文件夹（影响 URL，不影响分类）
+
+可以在 `_posts` 下建子文件夹：
+
+```text
+source/_posts/
+├── 技术/
+│   ├── Hexo教程.md
+│   └── Docker入门.md
+└── 生活/
+    └── 读书笔记.md
+```
+
+这样文章的 URL 会包含文件夹路径，但 Hexo 不会自动将其识别为分类。
+
+### 独立页面
+
+除了文章，还可以创建不在文章列表中显示的页面：
+
+```bash
+npx hexo new page about   # 关于我
+npx hexo new page links   # 友情链接
+npx hexo new page books   # 书单
+```
+
+页面会生成在 `source/页面名/index.md`，URL 为 `/页面名/`。
+
+### 推荐做法
+
+| 用途 | 方式 |
+|------|------|
+| 普通博客文章 | `source/_posts/文章名.md` + Front-matter 分类/标签 |
+| 不在文章流中的内容 | `npx hexo new page 页面名` |
+| 顶部导航 Tab | 修改 `_config.butterfly.yml` 的 `menu` |
+
+---
+
 ## 生成站点
 
 本地确认无误后，生成静态文件：
