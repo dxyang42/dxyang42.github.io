@@ -47,6 +47,39 @@ gh repo create dxyang42.github.io --public --description "Personal blog powered 
 - `source` 分支：放 Hexo 源码、主题配置、文章 Markdown。
 - `master` 分支：放 `hexo generate` 生成的静态站点，供 GitHub Pages 读取。
 
+### 为什么不能只用 `master` 分支
+
+如果所有内容都放在 `master` 分支，会有几个问题：
+
+1. **源码会丢失**：GitHub Pages 只需要 `index.html`、CSS、JS 这些生成后的文件，Markdown 源文件和配置文件不会出现在网站上。
+2. **无法跨设备写作**：换台电脑或以后回溯时，找不到原始文章和配置。
+3. **版本控制失效**：你看到的全是生成后的静态代码，无法 diff 文章修改、回滚主题配置。
+
+### 两个分支的分工
+
+| 分支 | 内容 | 作用 |
+|------|------|------|
+| `source` | Markdown 文章、Hexo 配置、主题配置、README | 博客的源码，用来写作和开发 |
+| `master` | `hexo generate` 生成的 `public/` 静态文件 | 供 GitHub Pages 直接展示 |
+
+### 部署时发生了什么
+
+当你运行：
+
+```bash
+npx hexo deploy
+```
+
+`hexo-deployer-git` 插件会：
+
+1. 执行 `hexo generate` 生成 `public/` 目录；
+2. 把 `public/` 里的内容推送到 `master` 分支；
+3. GitHub Pages 检测到 `master` 分支更新后，自动刷新网站。
+
+所以 `master` 分支是被 Hexo **自动维护**的，平时不需要手动往里面写东西。
+
+### 初始化分支
+
 先把本地分支改名为 `source` 并推上去：
 
 ```bash
