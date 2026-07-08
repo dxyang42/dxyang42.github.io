@@ -103,4 +103,4 @@ theme: landscape
 deploy:
   type: git
   repo: https://github.com/dxyang42/dxyang42.github.io.git
-  branch: gh-pages
+  branch: master
