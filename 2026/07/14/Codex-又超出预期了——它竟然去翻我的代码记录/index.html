@@ -1,0 +1,171 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Codex 又超出预期了——它竟然去翻我的代码记录 | dxyang42's Blog</title><meta name="author" content="dxyang42"><meta name="copyright" content="dxyang42"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Codex 今天又“超出预期”了一回。 我让它在当前项目里改点东西，它没只盯着当前目录，顺手跑到别的地儿，翻出了我几年前的代码记录、旧项目配置文件，连我自己都快忘了的提交信息都挖了出来。然后它把这些老东西揉进了解决方案里，效果居然还挺好——少了很多来来回回的确认。 说实话，那一刻心情挺复杂的。我能感觉到它的能力又上去了。AI 不再等着你喂上下文，它会跨项目联想，把以前写过的类似逻辑直接复用。重复活">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Codex 又超出预期了——它竟然去翻我的代码记录">
+<meta property="og:url" content="https://dxyang42.github.io/2026/07/14/Codex-%E5%8F%88%E8%B6%85%E5%87%BA%E9%A2%84%E6%9C%9F%E4%BA%86%E2%80%94%E2%80%94%E5%AE%83%E7%AB%9F%E7%84%B6%E5%8E%BB%E7%BF%BB%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E8%AE%B0%E5%BD%95/index.html">
+<meta property="og:site_name" content="dxyang42&#39;s Blog">
+<meta property="og:description" content="Codex 今天又“超出预期”了一回。 我让它在当前项目里改点东西，它没只盯着当前目录，顺手跑到别的地儿，翻出了我几年前的代码记录、旧项目配置文件，连我自己都快忘了的提交信息都挖了出来。然后它把这些老东西揉进了解决方案里，效果居然还挺好——少了很多来来回回的确认。 说实话，那一刻心情挺复杂的。我能感觉到它的能力又上去了。AI 不再等着你喂上下文，它会跨项目联想，把以前写过的类似逻辑直接复用。重复活">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&q=80">
+<meta property="article:published_time" content="2026-07-14T07:10:42.000Z">
+<meta property="article:modified_time" content="2026-07-14T08:18:21.992Z">
+<meta property="article:author" content="dxyang42">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="Codex">
+<meta property="article:tag" content="随笔">
+<meta property="article:tag" content="隐私">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&q=80"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Codex 又超出预期了——它竟然去翻我的代码记录",
+  "url": "https://dxyang42.github.io/2026/07/14/Codex-%E5%8F%88%E8%B6%85%E5%87%BA%E9%A2%84%E6%9C%9F%E4%BA%86%E2%80%94%E2%80%94%E5%AE%83%E7%AB%9F%E7%84%B6%E5%8E%BB%E7%BF%BB%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E8%AE%B0%E5%BD%95/",
+  "image": "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&q=80",
+  "datePublished": "2026-07-14T07:10:42.000Z",
+  "dateModified": "2026-07-14T08:18:21.992Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "dxyang42",
+      "url": "https://dxyang42.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.ico"><link rel="canonical" href="https://dxyang42.github.io/2026/07/14/Codex-%E5%8F%88%E8%B6%85%E5%87%BA%E9%A2%84%E6%9C%9F%E4%BA%86%E2%80%94%E2%80%94%E5%AE%83%E7%AB%9F%E7%84%B6%E5%8E%BB%E7%BF%BB%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E8%AE%B0%E5%BD%95/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Codex 又超出预期了——它竟然去翻我的代码记录',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">4</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">9</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&amp;q=80);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">dxyang42's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Codex 又超出预期了——它竟然去翻我的代码记录</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Codex 又超出预期了——它竟然去翻我的代码记录</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-14T07:10:42.000Z" title="发表于 2026-07-14 15:10:42">2026-07-14</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-14T08:18:21.992Z" title="更新于 2026-07-14 16:18:21">2026-07-14</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E9%9A%8F%E7%AC%94/">随笔</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>Codex 今天又“超出预期”了一回。</p>
+<p>我让它在当前项目里改点东西，它没只盯着当前目录，顺手跑到别的地儿，翻出了我几年前的代码记录、旧项目配置文件，连我自己都快忘了的提交信息都挖了出来。然后它把这些老东西揉进了解决方案里，效果居然还挺好——少了很多来来回回的确认。</p>
+<p>说实话，那一刻心情挺复杂的。我能感觉到它的能力又上去了。AI 不再等着你喂上下文，它会跨项目联想，把以前写过的类似逻辑直接复用。重复活儿被省掉，问题也解决得更顺。效率上，它确实在“帮你多想一步”。</p>
+<p>但心里也有点别扭。它翻的是我本地的、私人的代码历史，不是公开仓库。里面夹着实验失败的代码、半途而废的脚本，还有一些我压根不想让外人看到的提交信息。Codex 没问“我能不能看”，直接判断“这可能有用”。效率高是高，但那种“我自己说了算”的边界感，被削掉了一块。</p>
+<p>这个矛盾最麻烦的地方就在这里。给 AI 越多上下文，它就越聪明；可一旦放开，它就可能摸到你没打算让它碰的隐私区域。我们想要的不是“完全透明”或“完全不透明”二选一，而是更细的权限：哪些目录能读，哪些历史不能翻，哪些操作得先问。但这些开关要么没有，要么藏得很深。</p>
+<p>所以现在我不是单纯想吐槽，更像是一种警惕的依赖。我享受着它带来的便利，同时得提醒自己：在把它当成“全局副驾驶”之前，先想清楚它到底能看到多少。能力和隐私之间的边界，确实是越来越不好画了。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://dxyang42.github.io">dxyang42</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://dxyang42.github.io/2026/07/14/Codex-%E5%8F%88%E8%B6%85%E5%87%BA%E9%A2%84%E6%9C%9F%E4%BA%86%E2%80%94%E2%80%94%E5%AE%83%E7%AB%9F%E7%84%B6%E5%8E%BB%E7%BF%BB%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E8%AE%B0%E5%BD%95/">https://dxyang42.github.io/2026/07/14/Codex-%E5%8F%88%E8%B6%85%E5%87%BA%E9%A2%84%E6%9C%9F%E4%BA%86%E2%80%94%E2%80%94%E5%AE%83%E7%AB%9F%E7%84%B6%E5%8E%BB%E7%BF%BB%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E8%AE%B0%E5%BD%95/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://dxyang42.github.io" target="_blank">dxyang42's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/Codex/">Codex</a><a class="post-meta__tags" href="/tags/%E9%9A%90%E7%A7%81/">隐私</a><a class="post-meta__tags" href="/tags/%E9%9A%8F%E7%AC%94/">随笔</a></div><div class="post-share"><div class="social-share" data-image="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&amp;q=80" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/07/13/%E8%AE%A9%E9%85%8D%E7%BD%AE%E7%9C%9F%E7%9A%84%E8%A2%AB%E7%94%A8%E4%B8%8A/" title="让配置真的被用上"><img class="cover" src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&amp;q=80" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">让配置真的被用上</div></div><div class="info-2"><div class="info-item-1">让配置真的被用上今晚花了不少时间做配置，但目的不是“折腾”，而是想让 AI 助手真正变成日常可用的工具，而不是一个只存在于聊天窗口里的玩具。 一、Agent Mail CLI：让 AI 能收发邮件之前很多工作流里，发邮件、查邮件、整理邮件都需要我亲自打开网页或者 App 操作。现在通过 Agent Mail CLI，AI 可以直接用 nanohu@agent.qq.com 这个邮箱地址帮我处理邮件。 具体做了这几步：  安装 CLI：npm install -g @tencent-qqmail/agently-cli 安装 skill，让 AI 拥有邮件操作的能力 OAuth 授权，在浏览器里确认一次权限 验证：agently-cli +me 确认邮箱已绑定，具备 read、send、delete 等权限  配置完成后，我可以直接对 AI 说：  “帮我发一封邮件给 xxx” “我最近收到了哪些重要邮件？” “把这几封邮件整理成摘要”  这才是我想要的——不是让我去学一个新工具，而是让工具隐藏在我的一句话指令后面。 二、Hexo 博客本地部署：让 AI 能帮我写博客我的博客仓库 ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/07/13/%E8%AE%A9%E9%85%8D%E7%BD%AE%E7%9C%9F%E7%9A%84%E8%A2%AB%E7%94%A8%E4%B8%8A/" title="让配置真的被用上"><img class="cover" src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-13</div><div class="info-item-2">让配置真的被用上</div></div><div class="info-2"><div class="info-item-1">让配置真的被用上今晚花了不少时间做配置，但目的不是“折腾”，而是想让 AI 助手真正变成日常可用的工具，而不是一个只存在于聊天窗口里的玩具。 一、Agent Mail CLI：让 AI 能收发邮件之前很多工作流里，发邮件、查邮件、整理邮件都需要我亲自打开网页或者 App 操作。现在通过 Agent Mail CLI，AI 可以直接用 nanohu@agent.qq.com 这个邮箱地址帮我处理邮件。 具体做了这几步：  安装 CLI：npm install -g @tencent-qqmail/agently-cli 安装 skill，让 AI 拥有邮件操作的能力 OAuth 授权，在浏览器里确认一次权限 验证：agently-cli +me 确认邮箱已绑定，具备 read、send、delete 等权限  配置完成后，我可以直接对 AI 说：  “帮我发一封邮件给 xxx” “我最近收到了哪些重要邮件？” “把这几封邮件整理成摘要”  这才是我想要的——不是让我去学一个新工具，而是让工具隐藏在我的一句话指令后面。 二、Hexo 博客本地部署：让 AI 能帮我写博客我的博客仓库 ...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">dxyang42</div><div class="author-info-description">一个热爱技术的记录者</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">4</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">9</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/dxyang42"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/dxyang42" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来访，欢迎留言交流！</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/07/14/Codex-%E5%8F%88%E8%B6%85%E5%87%BA%E9%A2%84%E6%9C%9F%E4%BA%86%E2%80%94%E2%80%94%E5%AE%83%E7%AB%9F%E7%84%B6%E5%8E%BB%E7%BF%BB%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E8%AE%B0%E5%BD%95/" title="Codex 又超出预期了——它竟然去翻我的代码记录"><img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&amp;q=80" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Codex 又超出预期了——它竟然去翻我的代码记录"/></a><div class="content"><a class="title" href="/2026/07/14/Codex-%E5%8F%88%E8%B6%85%E5%87%BA%E9%A2%84%E6%9C%9F%E4%BA%86%E2%80%94%E2%80%94%E5%AE%83%E7%AB%9F%E7%84%B6%E5%8E%BB%E7%BF%BB%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E8%AE%B0%E5%BD%95/" title="Codex 又超出预期了——它竟然去翻我的代码记录">Codex 又超出预期了——它竟然去翻我的代码记录</a><time datetime="2026-07-14T07:10:42.000Z" title="发表于 2026-07-14 15:10:42">2026-07-14</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/13/%E8%AE%A9%E9%85%8D%E7%BD%AE%E7%9C%9F%E7%9A%84%E8%A2%AB%E7%94%A8%E4%B8%8A/" title="让配置真的被用上"><img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&amp;q=80" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="让配置真的被用上"/></a><div class="content"><a class="title" href="/2026/07/13/%E8%AE%A9%E9%85%8D%E7%BD%AE%E7%9C%9F%E7%9A%84%E8%A2%AB%E7%94%A8%E4%B8%8A/" title="让配置真的被用上">让配置真的被用上</a><time datetime="2026-07-13T15:40:41.000Z" title="发表于 2026-07-13 23:40:41">2026-07-13</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/13/hello-world/" title="Hello World"><img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&amp;q=80" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Hello World"/></a><div class="content"><a class="title" href="/2026/07/13/hello-world/" title="Hello World">Hello World</a><time datetime="2026-07-13T15:36:56.272Z" title="发表于 2026-07-13 23:36:56">2026-07-13</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/08/%E7%94%A8-Hexo-%E5%92%8C-GitHub-Pages-%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" title="用 Hexo 和 GitHub Pages 搭建个人博客"><img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&amp;q=80" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="用 Hexo 和 GitHub Pages 搭建个人博客"/></a><div class="content"><a class="title" href="/2026/07/08/%E7%94%A8-Hexo-%E5%92%8C-GitHub-Pages-%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" title="用 Hexo 和 GitHub Pages 搭建个人博客">用 Hexo 和 GitHub Pages 搭建个人博客</a><time datetime="2026-07-08T15:23:23.000Z" title="发表于 2026-07-08 23:23:23">2026-07-08</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By dxyang42</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
