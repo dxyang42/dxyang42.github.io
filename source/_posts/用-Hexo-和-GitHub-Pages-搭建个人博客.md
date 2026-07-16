@@ -5,6 +5,8 @@ tags:
   - Hexo
   - GitHub Pages
   - 博客
+categories:
+  - 技术
 ---
 
 这篇文章记录我是如何从一个空文件夹开始，把个人博客搭起来并部署到 GitHub Pages 上的。初始环境非常简单：一个空目录，以及一个已经登录好的 `gh` CLI。

@@ -5,7 +5,6 @@ tags:
   - AI
   - Codex
   - 隐私
-  - 随笔
 categories:
   - 随笔
 ---
