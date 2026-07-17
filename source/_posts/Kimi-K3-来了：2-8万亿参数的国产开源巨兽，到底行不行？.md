@@ -66,7 +66,7 @@ K3 出来之后，我会先把手头的几个长文档项目跑一遍，看看 1
 ---
 
 *参考来源：*
-- *Kimi K3 官方技术博客：Open Frontier Intelligence*
-- *Kimi API 开放平台文档*
-- *Artificial Analysis 独立评测*
-- *OpenRouter 模型定价与性能数据*
+- *[Kimi K3 官方技术博客：Open Frontier Intelligence](https://www.kimi.com/blog/kimi-k3)*
+- *[Kimi API 开放平台文档](https://platform.kimi.ai/docs)*
+- *[Artificial Analysis 独立评测](https://artificialanalysis.ai/models/kimi-k3)*
+- *[OpenRouter 模型定价与性能数据](https://openrouter.ai/moonshotai/kimi-k3)*
