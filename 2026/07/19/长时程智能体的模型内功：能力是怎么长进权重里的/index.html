@@ -1,0 +1,401 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>长时程智能体的模型内功：能力是怎么长进权重里的 | dxyang42's Blog</title><meta name="author" content="dxyang42"><meta name="copyright" content="dxyang42"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Towards Long-Horizon Agents 综述模型侧优化篇：架构底座、数据与环境合成、预训练&#x2F;中训练、SFT、Agentic RL、on-policy 蒸馏、训练时自进化，一条七级训练流水线全拆解。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="长时程智能体的模型内功：能力是怎么长进权重里的">
+<meta property="og:url" content="https://dxyang42.github.io/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%A8%A1%E5%9E%8B%E5%86%85%E5%8A%9F%EF%BC%9A%E8%83%BD%E5%8A%9B%E6%98%AF%E6%80%8E%E4%B9%88%E9%95%BF%E8%BF%9B%E6%9D%83%E9%87%8D%E9%87%8C%E7%9A%84/index.html">
+<meta property="og:site_name" content="dxyang42&#39;s Blog">
+<meta property="og:description" content="Towards Long-Horizon Agents 综述模型侧优化篇：架构底座、数据与环境合成、预训练&#x2F;中训练、SFT、Agentic RL、on-policy 蒸馏、训练时自进化，一条七级训练流水线全拆解。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dxyang42.github.io/img/long-horizon-model-opt-cover.png">
+<meta property="article:published_time" content="2026-07-19T15:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-19T09:06:19.807Z">
+<meta property="article:author" content="dxyang42">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="Agent">
+<meta property="article:tag" content="论文">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dxyang42.github.io/img/long-horizon-model-opt-cover.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "长时程智能体的模型内功：能力是怎么长进权重里的",
+  "url": "https://dxyang42.github.io/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%A8%A1%E5%9E%8B%E5%86%85%E5%8A%9F%EF%BC%9A%E8%83%BD%E5%8A%9B%E6%98%AF%E6%80%8E%E4%B9%88%E9%95%BF%E8%BF%9B%E6%9D%83%E9%87%8D%E9%87%8C%E7%9A%84/",
+  "image": "https://dxyang42.github.io/img/long-horizon-model-opt-cover.png",
+  "datePublished": "2026-07-19T15:00:00.000Z",
+  "dateModified": "2026-07-19T09:06:19.807Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "dxyang42",
+      "url": "https://dxyang42.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.ico"><link rel="canonical" href="https://dxyang42.github.io/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%A8%A1%E5%9E%8B%E5%86%85%E5%8A%9F%EF%BC%9A%E8%83%BD%E5%8A%9B%E6%98%AF%E6%80%8E%E4%B9%88%E9%95%BF%E8%BF%9B%E6%9D%83%E9%87%8D%E9%87%8C%E7%9A%84/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '长时程智能体的模型内功：能力是怎么长进权重里的',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/long-horizon-model-opt-cover.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">dxyang42's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">长时程智能体的模型内功：能力是怎么长进权重里的</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">长时程智能体的模型内功：能力是怎么长进权重里的</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-19T15:00:00.000Z" title="发表于 2026-07-19 23:00:00">2026-07-19</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-19T09:06:19.807Z" title="更新于 2026-07-19 17:06:19">2026-07-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>这是《Towards Long-Horizon Agents》系列笔记的第三篇。第一篇<a href="https://dxyang42.github.io/2026/07/19/149%E9%A1%B5%E7%BB%BC%E8%BF%B0%E8%AF%BB%E5%AE%8C%EF%BC%8C%E6%88%91%E6%8A%8A%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%9C%AF%E8%AF%AD%E6%8C%A8%E4%B8%AA%E6%8B%86%E4%BA%86%E4%B8%80%E9%81%8D/">拆了术语</a>，核心是 Agent &#x3D; π ⊕ H，模型加 harness 才是完整的 agent。第二篇<a href="https://dxyang42.github.io/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E8%B5%84%E6%BA%90%E6%B8%85%E5%8D%95%EF%BC%9A%E5%93%AA%E4%BA%9B%E6%A8%A1%E5%9E%8B%E3%80%81benchmark%E3%80%81%E6%95%B0%E6%8D%AE%E9%9B%86%E5%80%BC%E5%BE%97%E7%9B%AF/">整理了资源清单</a>。这篇钻进 π 内部：模型侧到底怎么优化，长时程能力是怎么一点点长进权重里的。</p>
+<p>综述 §5 的标题就点明了主线：Internalizing Long-Horizon Capability，内化。harness 是运行时外挂，模型侧优化的本质是把外挂干过的活收进权重。原文说得很直白：流水线每一阶段要么在内化一个原本由运行时提供的能力，要么在为下一步内化生产经验。</p>
+<p>整节组织成一条七级训练流水线，我按这个顺序拆。</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>干什么</th>
+<th>内化的对象</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5.1 架构底座</td>
+<td>决定历史怎么存</td>
+<td>长序列表征能力</td>
+</tr>
+<tr>
+<td>5.2 数据与环境合成</td>
+<td>造任务、造环境、造轨迹</td>
+<td>训练经验的生产线</td>
+</tr>
+<tr>
+<td>5.3 预训练&#x2F;中训练</td>
+<td>埋先验</td>
+<td>推理、长上下文、多模态</td>
+</tr>
+<tr>
+<td>5.4 SFT</td>
+<td>过程级模仿</td>
+<td>交互模式、工具用法</td>
+</tr>
+<tr>
+<td>5.5 Agentic RL</td>
+<td>从自己交互里学</td>
+<td>延迟奖励下的决策</td>
+</tr>
+<tr>
+<td>5.6 On-Policy 蒸馏</td>
+<td>在自己的轨迹上被教</td>
+<td>分布偏移下的纠错</td>
+</tr>
+<tr>
+<td>5.7 训练时自进化</td>
+<td>数据任务环境全进循环</td>
+<td>经验写回权重的闭环</td>
+</tr>
+</tbody></table>
+<h2 id="5-1-架构底座：历史怎么存"><a href="#5-1-架构底座：历史怎么存" class="headerlink" title="5.1 架构底座：历史怎么存"></a>5.1 架构底座：历史怎么存</h2><p>模型要怎么记住一条超长轨迹，架构层面有四种回答。</p>
+<table>
+<thead>
+<tr>
+<th>路线</th>
+<th>思路</th>
+<th>代表</th>
+<th>短板</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>显式上下文</td>
+<td>历史就是 token 序列，靠 attention 互查</td>
+<td>Longformer、Big Bird、NSA、MoBA</td>
+<td>成本和窗口一起涨，稀疏模式会漏关键 token</td>
+</tr>
+<tr>
+<td>压缩状态</td>
+<td>历史压成紧凑内部状态，逐步更新</td>
+<td>RetNet、RWKV、Mamba</td>
+<td>精确回忆不行，旧 token 折进状态就找不回原文</td>
+</tr>
+<tr>
+<td>混合架构</td>
+<td>attention 管精确取证，状态模块管长程连续性</td>
+<td>Jamba、Kimi Linear</td>
+<td>工程复杂度高</td>
+</tr>
+<tr>
+<td>高吞吐机制</td>
+<td>不改存储方式，只降解码的串行开销和缓存流量</td>
+<td>投机解码、Medusa、EAGLE、MTP、MQA&#x2F;GQA</td>
+<td>省的是钱，不解决记忆问题</td>
+</tr>
+</tbody></table>
+<p>两个细节值得单说。</p>
+<p>一是 MLA 的归类。DeepSeek-V2 提出、V3 沿用、Kimi K2 也在用的 MLA，把 KV cache 压成 latent。看着像压缩状态，但它保留了每个 token 的 latent，依然对全部历史做 attention，所以没有精确回忆的损失。综述把它定在显式上下文和压缩状态之间，兼作高吞吐机制。这个辨析挺能说明问题：架构分类不是贴标签，要看信息到底以什么形式被保留。</p>
+<p>二是 MoE 为什么不在表里。综述明确说 MoE 不算第四种表征路线。它路由的是 FFN 专家，改变的是模型容量，不决定序列历史怎么存。所以 MoE 模型照样可以配显式 attention 或混合架构，两根轴别混在一起。</p>
+<p>对长时程 agent 来说，这个选择的实际含义是：纯 attention 能精确翻旧账但贵，纯压缩状态便宜但会丢细节，而 agent 的活恰恰既要翻旧账（三步前的工具返回原文）又要长跑。混合架构成为方向不是偶然。</p>
+<h2 id="5-2-数据与环境合成：没有经验就造经验"><a href="#5-2-数据与环境合成：没有经验就造经验" class="headerlink" title="5.2 数据与环境合成：没有经验就造经验"></a>5.2 数据与环境合成：没有经验就造经验</h2><p>长时程行为和普通问答最大的区别，是它学的是交互经验：怎么决策、怎么观察反馈、怎么纠错、怎么在长轨迹里攒信息。这种数据天然稀缺，部署日志贵且有隐私问题，所以合成成了主路线。三个耦合的对象：任务、环境、轨迹。</p>
+<p><strong>任务合成</strong>四条路：</p>
+<table>
+<thead>
+<tr>
+<th>路线</th>
+<th>思路</th>
+<th>代表</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>依赖链</td>
+<td>把子目标串起来，早期决策约束后期动作</td>
+<td>AgentSynth、TaskCraft</td>
+</tr>
+<tr>
+<td>图结构信息</td>
+<td>任务是从网页&#x2F;文档&#x2F;证据图里找路径，难在分支和不完整观察下选证据</td>
+<td>WebWalker、WebDancer、WebSailor、WebShaper</td>
+</tr>
+<tr>
+<td>状态转移</td>
+<td>任务&#x3D;初态到目标态的差，或从错误态恢复</td>
+<td>SWE-Gym、R2E、SWE-smith、DIVE、CLI-Gym</td>
+</tr>
+<tr>
+<td>课程驱动</td>
+<td>难度跟着当前策略走，不提前定死分布</td>
+<td>WebRL、AgentFrontier（最近发展区）、CuES</td>
+</tr>
+</tbody></table>
+<p>前三条决定”考什么”，课程驱动决定”难度涨多快”，两个维度正交。</p>
+<p><strong>环境合成</strong>三族：</p>
+<table>
+<thead>
+<tr>
+<th>族</th>
+<th>转移和反馈谁产生</th>
+<th>代表</th>
+<th>问题</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>符号环境</td>
+<td>代码、测试、数据库、业务逻辑，硬信号可验证</td>
+<td>SWE-Gym、Terminal-Bench、WebArena、OSWorld</td>
+<td>规则明确但扛不住模糊场景和动态界面</td>
+</tr>
+<tr>
+<td>神经环境</td>
+<td>模型当世界模型，直接模拟下一轮反馈</td>
+<td>DIAMOND、GameNGen（像素级）、WebDreamer（文本级）</td>
+<td>便宜可扩展，但会幻觉、会漂移、有 sim-to-real 差距</td>
+</tr>
+<tr>
+<td>混合环境</td>
+<td>硬状态和最终验证留在符号侧，模型管用户模拟和语言接口</td>
+<td>τ-bench、MCP 工具服务器</td>
+<td>设计核心是模型和符号验证的边界画在哪</td>
+</tr>
+</tbody></table>
+<p><strong>轨迹合成</strong>四个方向：环境接地的执行记录（TOUCAN 在真实 MCP 环境里合成、ASTRA 用工具调用图约束）、策略对齐的 rollout（AgentGym-RL、Agent Lightning 把执行记录拆成 RL 可消费的单位）、步骤级归因和失败复用（CSO 找改变结果的关键步、AgentHER 给失败轨迹换个可达目标重新标注）、历史压缩（ReSum 按摘要分段训练、Context-Folding 把子过程折叠）。</p>
+<p>这块有个判断我觉得很关键：轨迹质量继承环境的质量。环境能观察什么、能验证什么，决定了轨迹里能留下什么信号。垃圾环境造不出金轨迹。</p>
+<h2 id="5-3-预训练与中训练：先验怎么埋"><a href="#5-3-预训练与中训练：先验怎么埋" class="headerlink" title="5.3 预训练与中训练：先验怎么埋"></a>5.3 预训练与中训练：先验怎么埋</h2><p>后面 SFT 和 RL 能激发出的能力，上限在预训练就定了个大概。四个抓手。</p>
+<p><strong>推理先验</strong>。代码和数学是注入推理先验最好的数据源，因为它们天然带结构化依赖、可执行程序、多步推导和可验证的中间状态。Qwen2.5、DeepSeek-V3、GLM-4.5&#x2F;5、Kimi K2 的配方里，代码数学推理和 agentic 数据都是重头。Qwen3-Coder-Next 更直接，中训练就瞄准代码推理、仓库级理解和 agent 式交互。</p>
+<p><strong>长上下文状态</strong>。对 agent 来说，上下文不是更长的输入窗口，是序列化的工作状态，里面装着目标、观察、证据、工具输出、失败记录和改过的计划。两条技术线：一条改位置编码，Position Interpolation 线性缩放、YaRN 按频率分档、LongLoRA 用移位稀疏注意力做参数高效的扩展；另一条改训练配方，ProLong 证明长上下文能力取决于继续训练的数据构成和序列长度，UltraLong 推到百万 token，LongWriter 则发现光有大窗口不会自动带来长输出，得专门训。GLM-5.2 把 1M 窗口和长时程编码场景的专项训练绑在一起，算是这个思路的工业落地。</p>
+<p><strong>多模态感知</strong>。agent 面对的任务状态分布在网页、截图、视频、音频流里。趋势是视觉接地和 GUI 控制从预训练阶段就当原生能力训，而不是文本模型训完再补。Seed1.5&#x2F;1.6-VL 用大规模图文和交互数据交织预训练，MiMo-VL 把 GUI 定位当一等目标，Qwen3.5-Omni 和 Kimi K2.5 往全模态走。</p>
+<p><strong>数据配比</strong>。DataComp-LM、FineWeb、Dolma、OLMo 让预训练数据构建可复现；DoReMi 和 Data Mixing Laws 用代理实验优化领域配比；OPUS 在每个训练迭代里按样本在优化空间的效用打分选数据，从”更多 token”转向”更好的 token”。对 agent 更直接的是把数据组织成轨迹而不是孤立文本，AgentTuning、Agent-FLAN、AgentBank 都验证了这个方向。</p>
+<h2 id="5-4-SFT：过程级模仿"><a href="#5-4-SFT：过程级模仿" class="headerlink" title="5.4 SFT：过程级模仿"></a>5.4 SFT：过程级模仿</h2><p>长时程 agent 的 SFT 不是指令跟随，是对轨迹的过程级模仿：怎么分解目标、怎么调工具、怎么读观察、怎么更新状态、怎么从错误里爬出来、怎么收尾。它通常当冷启动，先把合法交互模式框住，再上在线优化。</p>
+<p><strong>选数据，质比量重要，但”少即是多”有争议</strong>。AgentInstruct 用一小撮高质量轨迹混通用指令；FireAct 证明强模型生成的轨迹比纯 prompt 适配管用；LIMI 主张策略性精选的小样本就能激发 agency。更激进的 ATLaS 干脆不克隆完整轨迹，只挑规划、子目标推理这些关键步骤微调，反而减轻了专家偏置、提升了跨环境泛化。LIMO 用 817 条精选样本从强基座里引出复杂数学推理，s1 压到 1K。反对声音也有：Ding 等人的实验显示，SFT 接 RL 的流水线里，数据规模仍然决定性能天花板，难度只是乘数。我的读法是，小样本激发的是基座里已有的东西，要突破上限还是得堆覆盖度。</p>
+<p><strong>工具数据得可执行</strong>。CodeAct 把动作表示成可运行的 Python，带执行反馈和自我调试；APIGen 的函数调用数据过格式、执行、语义三重校验；ToolACE 用自演化 API 池扩产；各家数据格式太碎，Agent Data Protocol 出面统一成公共轨迹表示，跨域混合 SFT 收益明显，还能避开单域微调的负迁移。</p>
+<p><strong>课程学习按时程和难度两个轴排</strong>。AgentGym-RL 的 ScalingInter-RL 先用短时程压榨出稳定基础策略，再逐步放大交互预算，躲开了直接上长任务的优化崩塌。Kim 等人的对照实验更干净：只改动作序列长度这一个变量，就证明时程本身是训练瓶颈，而且先短后长能诱导时程泛化，短任务上学到的能力能迁移到没见过的长任务。</p>
+<p><strong>蒸馏是轨迹蒸馏，不是答案蒸馏</strong>。强到弱方向，Agent Distillation 把检索和代码执行轨迹蒸进 3B 以下的小模型；Structured Agent Distillation 把轨迹切成 [reason] 和 [act] 段分别算损失；AgentArk 把一整个多智能体辩论系统蒸进单模型，把昂贵的测试时交互变成隐式自纠错。自蒸馏方向我最喜欢 Agent-R：用 MCTS 在失败轨迹里定位第一个错步，把它剪接到相邻的正确路径上，迭代微调教的是”当场改”，不是”跑完整局再忏悔”。RESD 则把失败转成复盘诊断，攒成可复用的 playbook。</p>
+<h2 id="5-5-Agentic-RL：四个问题"><a href="#5-5-Agentic-RL：四个问题" class="headerlink" title="5.5 Agentic RL：四个问题"></a>5.5 Agentic RL：四个问题</h2><p>SFT 学的是别人的轨迹，RL 优化的是自己的交互。综述把 Agentic RL 拆成四个问题，这个拆法比一堆方法名好记。</p>
+<h3 id="问题一：credit-怎么分"><a href="#问题一：credit-怎么分" class="headerlink" title="问题一：credit 怎么分"></a>问题一：credit 怎么分</h3><table>
+<thead>
+<tr>
+<th>粒度</th>
+<th>思路</th>
+<th>代表</th>
+<th>毛病</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Outcome</td>
+<td>只看最终结果：成功率、单测、终态检查</td>
+<td>DeepSeekMath、Search-R1、DeepRetrieval</td>
+<td>一个终分摊给整条轨迹，关键探索和冗余动作分不清</td>
+</tr>
+<tr>
+<td>Process</td>
+<td>给中间决策打分，或把稠密奖励铺到过程里</td>
+<td>ToolRL（把工具调用拆成格式、选型、参数几个维度分别打分）、AgentPRM</td>
+<td>需要过程监督源</td>
+</tr>
+<tr>
+<td>Rubric</td>
+<td>单指标不够时，用显式多维语义标准</td>
+<td>RaR、OpenRubrics（从偏好对比里归纳规则）、DR Tulu（rubric 和策略共演化）、RuscaRL（rubric 当会衰减的探索脚手架）</td>
+<td>rubric 质量、judge 偏置、reward hacking</td>
+</tr>
+</tbody></table>
+<p>rubric 这条线是 2025 年下半年以来的热点，原因很实际：agent 任务的上下文依赖、工具副作用太容易被单一复合奖励掩盖掉。</p>
+<h3 id="问题二：策略怎么更新稳"><a href="#问题二：策略怎么更新稳" class="headerlink" title="问题二：策略怎么更新稳"></a>问题二：策略怎么更新稳</h3><p>长轨迹加稀疏二元奖励，PPO&#x2F;GRPO 家族的毛病全出来了：长度偏置、组内归一化偏置、全对全错的无效组、token 级重要性比率不稳。clipping 系打补丁：REINFORCE++、DAPO、Dr.GRPO 修统计，GSPO 把重要性比率和裁剪提到序列级。</p>
+<p>更有意思的是优化单元下移。决策单位本来就不是单次响应，而是 turn、step、子目标。Turn-PPO、StepPO、SegPO 把 advantage 对齐到显式分段；GiGPO、Tree-GRPO 把比较锚定到共享状态或兄弟分支上，回答”哪个局部选择改变了后续轨迹”。</p>
+<p>第三个麻烦是熵坍缩：长时程 RL 很容易过度强化早期成功模式，轨迹多样性迅速消失。Clip-Cov、KL-Cov 给过度集中的更新装闸门；CURE 围绕高熵关键 token 重新拼接 rollout；EPO 把熵正则提到轨迹级；ARPO、AEPO 在工具反馈后的高熵位置做分支采样。</p>
+<h3 id="问题三：轨迹怎么采"><a href="#问题三：轨迹怎么采" class="headerlink" title="问题三：轨迹怎么采"></a>问题三：轨迹怎么采</h3><p>采样决定训练看到什么。轨迹级 rollout 是基本单位，Search-R1 一系把查询生成、证据获取、停止决策全折进 on-policy 轨迹，WebDancer、WebSailor 家族建了端到端的深研采样流水线。树结构采样解决独立 rollout 贵且对比信号弱的问题：从 ToT、RAP、LATS 一路到 Tree-GRPO，共享前缀、兄弟分支互相对比，TreePO 还能复用推理算力。预算感知剪枝管成本：LiteResearcher 按通过率剪，TCOD 用轨迹深度课程，ARPO 只在高熵工具调用步触发分支。</p>
+<h3 id="问题四：交互结构怎么组织"><a href="#问题四：交互结构怎么组织" class="headerlink" title="问题四：交互结构怎么组织"></a>问题四：交互结构怎么组织</h3><p>三个方向。层级框架：GLIDER、STEP-HRL 做规划器-执行器分解，子目标边界变成新的优化单元；SkillRL 从 RL 失败里演化技能库，Skill0 则直接把技能内化进参数。多智能体：MAGRPO 集中式 advantage 加分散执行，M-GRPO 给规划器和工具执行子 agent 分别算组相对优势，Dr.MAMR 用 Shapley 式因果影响估计治”懒 agent 坍缩”。</p>
+<p>最值得说的是<strong>记忆状态学习</strong>：把本来由 harness 固定管理的上下文、工作流、长期记忆，直接变成可学习的策略。Memory-R1 拆出独立的 Memory Manager 和 Answer Agent；Memory-as-Action 把工作记忆编辑当显式策略动作；Agent Workflow Memory 从成功任务里归纳可复用工作流；Agent Lightning 把现有工作流 trace 成 span 和转移，转成可训练样本。这一支是 π 和 H 融合的最前线：harness 的组件正在被一个一个变成 RL 的动作空间。</p>
+<h2 id="5-6-On-Policy-蒸馏：中间路线"><a href="#5-6-On-Policy-蒸馏：中间路线" class="headerlink" title="5.6 On-Policy 蒸馏：中间路线"></a>5.6 On-Policy 蒸馏：中间路线</h2><p>离线蒸馏吃固定专家轨迹，学不到自己走出来的状态分布；RL 在轨但奖励稀疏、探索贵。On-Policy Distillation（OPD，GKD 最早形式化）走中间：学生跑自己的轨迹，教师在这些轨迹上给监督。综述特意划了界：和 5.4 的离线蒸馏比，OPD 的监督落在学生当前 rollout 上；和 5.7 的自进化比，OPD 的任务集和环境固定，只是把监督信号加密。</p>
+<p>教师引导一系：DAgger-LLM 做 turn 级插值和逐步监督；MAD-OPD 聚合多个教师；KAT-Coder-V2 把多个互补专家 agent 蒸进统一策略；LiteGUI 用检索到的参考轨迹增强监督。核心发现是监督质量不只取决于教师强不强，还取决于什么时候、以什么粒度注入。</p>
+<p>自我提升一系不要外部教师，用两类自监督信号。一类是特权信息：训练时可见、部署时不可见的东西，比如结果信息、细粒度视觉标注（π-Play 是代表）。另一类是环境反馈：把稀疏的奖励、报错、验证器输出转成稠密自监督，或者把失败转成反思攒下来。</p>
+<h2 id="5-7-训练时自进化：闭环"><a href="#5-7-训练时自进化：闭环" class="headerlink" title="5.7 训练时自进化：闭环"></a>5.7 训练时自进化：闭环</h2><p>前面所有阶段都消耗预先准备好的数据和任务。自进化把反馈环闭上：当前策略产生新尝试、新失败、新反馈，训练把筛过的记录写回模型。数据、任务、甚至环境都变成循环自己更新的对象。三种形态：</p>
+<table>
+<thead>
+<tr>
+<th>形态</th>
+<th>循环怎么转</th>
+<th>代表</th>
+<th>风险</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>离线自进化</td>
+<td>生成-筛选-训练，数据可审计可降噪</td>
+<td>STaR、SOAR、SAMULE、rStar-Math（MCTS 合成逐步验证的轨迹，策略和过程偏好模型共同演化）</td>
+<td>候选数据来自现有分布，强化已知多、发现新策略少</td>
+</tr>
+<tr>
+<td>在线自进化</td>
+<td>经验采集和策略更新交替，在自己诱导的状态分布上学</td>
+<td>WebRL、Agent0（课程 agent 和执行器从同一基座共进化，零外部数据）</td>
+<td>对环境和验证器质量极敏感，长 rollout 放大一切</td>
+</tr>
+<tr>
+<td>Agent-环境共进化</td>
+<td>环境本身跟着策略能力调</td>
+<td>Environment Tuning、RLVE、GenEnv、Agent-World、Socratic-Zero（Teacher&#x2F;Solver&#x2F;Generator 三方共进化）</td>
+<td>动态课程可能强化有缺陷的能力</td>
+</tr>
+</tbody></table>
+<p>综述给的判定标准很严：外部记忆、技能库、工作流痕迹只是经验的中间形态，只有当它们的稳定模式通过蒸馏、微调、RL 或可训练模块被真正吸收，才算训练时自进化。风险也来自 bootstrap 结构本身：自生成数据可能让分布收缩，弱验证器诱导 reward hacking。所以结论是需要强验证器、过程级反馈、离线审计加在线探索的组合。</p>
+<h2 id="收尾：我的几点看法"><a href="#收尾：我的几点看法" class="headerlink" title="收尾：我的几点看法"></a>收尾：我的几点看法</h2><p>第一，这节的组织方式本身就值得学。大部分综述按能力列方法，这篇按训练流水线组织，每一级回答”这一棒把什么内化进权重”，和 §4 的 harness 六组件正好镜像。读完之后看任何一篇 agent 训练论文，都能定位它在流水线的哪一级。</p>
+<p>第二，内化是个大方向，但不是免费的。运行时外挂改起来是改配置，内化进权重改起来是重新训练。harness 的价值不会消失，它只是不停把沉淀下来的能力交给权重，自己往更前沿的地方挪。</p>
+<p>第三，如果让我押一个这节里最值得跟踪的方向，我押记忆状态学习。它直接回答了第一篇里 C3 能力（经验的经验性）怎么来的问题，而且是七级流水线里唯一一个同时横跨架构、RL 和自进化三段的方向。</p>
+<hr>
+<p><em>参考来源：</em></p>
+<ul>
+<li><em><a target="_blank" rel="noopener" href="https://openreview.net/forum?id=HyhfhlbWGh">Towards Long-Horizon Agents: A Survey（OpenReview）</a></em></li>
+<li><em><a target="_blank" rel="noopener" href="https://github.com/RUC-NLPIR/Awesome-Long-Horizon-Agents">Awesome-Long-Horizon-Agents（论文配套仓库）</a></em></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://dxyang42.github.io">dxyang42</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://dxyang42.github.io/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%A8%A1%E5%9E%8B%E5%86%85%E5%8A%9F%EF%BC%9A%E8%83%BD%E5%8A%9B%E6%98%AF%E6%80%8E%E4%B9%88%E9%95%BF%E8%BF%9B%E6%9D%83%E9%87%8D%E9%87%8C%E7%9A%84/">https://dxyang42.github.io/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%A8%A1%E5%9E%8B%E5%86%85%E5%8A%9F%EF%BC%9A%E8%83%BD%E5%8A%9B%E6%98%AF%E6%80%8E%E4%B9%88%E9%95%BF%E8%BF%9B%E6%9D%83%E9%87%8D%E9%87%8C%E7%9A%84/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://dxyang42.github.io" target="_blank">dxyang42's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/Agent/">Agent</a><a class="post-meta__tags" href="/tags/%E8%AE%BA%E6%96%87/">论文</a></div><div class="post-share"><div class="social-share" data-image="/img/long-horizon-model-opt-cover.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E8%B5%84%E6%BA%90%E6%B8%85%E5%8D%95%EF%BC%9A%E5%93%AA%E4%BA%9B%E6%A8%A1%E5%9E%8B%E3%80%81benchmark%E3%80%81%E6%95%B0%E6%8D%AE%E9%9B%86%E5%80%BC%E5%BE%97%E7%9B%AF/" title="长时程智能体资源清单：哪些模型、benchmark、数据集值得盯"><img class="cover" src="/img/long-horizon-resources-cover.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">长时程智能体资源清单：哪些模型、benchmark、数据集值得盯</div></div><div class="info-2"><div class="info-item-1">上一篇把《Towards Long-Horizon Agents》的术语挨个拆了一遍，这篇干点更实际的：把里面点名的、可以拿来就用的资源整理成清单。 综述引了差不多 900 篇，但真值得收藏的没那么多。我按”评测—模型—数据与环境—框架”四类整理，全部以论文实际提到的为准。 看榜单之前有句话得先放这：论文反复强调，一个 benchmark 分数反映的是模型 + harness + 训练配方的联合贡献。只看模型名没意义，得看它套的什么 scaffold、给了多少预算，不然分数没法横向比。 一、Benchmark：按五个应用领域分软件工程 SWE-bench &#x2F; SWE-bench Verified（2024，OpenAI 人工筛的 500 题版）：仓库级 issue 修复，事实标准。 SWE-bench Pro（2025.09，Scale AI）：更长程的企业级仓库任务。 Terminal-Bench 2.0（2025.11）：难且真实的命令行任务，Kimi K3 那篇博客里我也提过它。 OctoBench（2026）：scaffold 感知的指令遵循评测，专门把”模型 ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/07/19/149%E9%A1%B5%E7%BB%BC%E8%BF%B0%E8%AF%BB%E5%AE%8C%EF%BC%8C%E6%88%91%E6%8A%8A%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%9C%AF%E8%AF%AD%E6%8C%A8%E4%B8%AA%E6%8B%86%E4%BA%86%E4%B8%80%E9%81%8D/" title="149页综述读完，我把&quot;长时程智能体&quot;的术语挨个拆了一遍"><img class="cover" src="/img/long-horizon-taxonomy-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-19</div><div class="info-item-2">149页综述读完，我把&quot;长时程智能体&quot;的术语挨个拆了一遍</div></div><div class="info-2"><div class="info-item-1">最近 agent 相关的文章里，有几个词出现的频率越来越高：长时程、长运行、自主智能体、自进化、harness。大部分人（包括之前的我）用得很随意，长时程约等于”跑得久”，harness 约等于”脚手架”，具体边界在哪，说不清。 前段时间读了人大 RUC 团队牵头挂出来的综述《Towards Long-Horizon Agents》，149 页，引了差不多 900 篇。这篇不打算复述全文，只拆它最有价值的一块：taxonomy，也就是这套术语体系本身。它把几个天天见但从没人认真区分的概念，挨个给了定义和判定标准。 下一篇再整理里面的模型、benchmark 和数据集清单。 地基：Agent &#x3D; π_θ ⊕ H整篇综述建立在一个公式上： Agent &#x3D; π_θ ⊕ H π_θ 是模型权重里学到的东西。H 是 harness，指权重之外、运行时包着模型的所有东西：提示词怎么组织、上下文怎么裁剪、记忆读写、工具调用、多 agent 编排、权限钩子、结果验证，全算。 这个公式想说的是：模型不换，只换 harness，你面对的就是另一个 agent。表现、上限、失败方式...</div></div></div></a><a class="pagination-related" href="/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E8%B5%84%E6%BA%90%E6%B8%85%E5%8D%95%EF%BC%9A%E5%93%AA%E4%BA%9B%E6%A8%A1%E5%9E%8B%E3%80%81benchmark%E3%80%81%E6%95%B0%E6%8D%AE%E9%9B%86%E5%80%BC%E5%BE%97%E7%9B%AF/" title="长时程智能体资源清单：哪些模型、benchmark、数据集值得盯"><img class="cover" src="/img/long-horizon-resources-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-19</div><div class="info-item-2">长时程智能体资源清单：哪些模型、benchmark、数据集值得盯</div></div><div class="info-2"><div class="info-item-1">上一篇把《Towards Long-Horizon Agents》的术语挨个拆了一遍，这篇干点更实际的：把里面点名的、可以拿来就用的资源整理成清单。 综述引了差不多 900 篇，但真值得收藏的没那么多。我按”评测—模型—数据与环境—框架”四类整理，全部以论文实际提到的为准。 看榜单之前有句话得先放这：论文反复强调，一个 benchmark 分数反映的是模型 + harness + 训练配方的联合贡献。只看模型名没意义，得看它套的什么 scaffold、给了多少预算，不然分数没法横向比。 一、Benchmark：按五个应用领域分软件工程 SWE-bench &#x2F; SWE-bench Verified（2024，OpenAI 人工筛的 500 题版）：仓库级 issue 修复，事实标准。 SWE-bench Pro（2025.09，Scale AI）：更长程的企业级仓库任务。 Terminal-Bench 2.0（2025.11）：难且真实的命令行任务，Kimi K3 那篇博客里我也提过它。 OctoBench（2026）：scaffold 感知的指令遵循评测，专门把”模型 ...</div></div></div></a><a class="pagination-related" href="/2026/07/17/Kimi-K3-%E6%9D%A5%E4%BA%86%EF%BC%9A2-8%E4%B8%87%E4%BA%BF%E5%8F%82%E6%95%B0%E7%9A%84%E5%9B%BD%E4%BA%A7%E5%BC%80%E6%BA%90%E5%B7%A8%E5%85%BD%EF%BC%8C%E5%88%B0%E5%BA%95%E8%A1%8C%E4%B8%8D%E8%A1%8C%EF%BC%9F/" title="Kimi K3 来了：2.8万亿参数的国产开源巨兽，到底行不行？"><img class="cover" src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-17</div><div class="info-item-2">Kimi K3 来了：2.8万亿参数的国产开源巨兽，到底行不行？</div></div><div class="info-2"><div class="info-item-1">昨晚刷手机，看到月之暗面官宣 Kimi K3。第一反应：怎么又发新模型了。第二反应：2.8 万亿参数？这也太卷了。 Kimi K2.5 我用得还挺顺手的，长文本在国产里算第一梯队。但 K3 这个阵仗，明显不是小升级，是直奔”世界最大开源模型”去的。 硬指标先看一遍 参数规模：2.8 万亿，MoE 架构。月之暗面说它是”全球首个公开的 3T 级模型”。 上下文窗口：100 万 token，也就是 1M。 多模态：原生视觉理解。 权重开源：官方说 2026 年 7 月 27 日前放出完整权重。  2.8T 什么概念？DeepSeek V4 Pro 是 1.6T。参数大不等于强，但至少说明月之暗面还在 scale 这条路上继续下注。 评测成绩：有惊喜，也有差距官方 blog 给了一大张 benchmark 表。我挑几个重点看。 GDPval-AA v2 这个榜单比较重要，测的是 AI 在 44 个职业、9 个行业里的真实任务表现。K3 拿到 1668 分，排在 Claude Fable 5（1760）和 GPT-5.6 Sol（1748）后面，但超过了 Claude Opus 4.8（...</div></div></div></a><a class="pagination-related" href="/2026/07/18/kaggle-cell-tracking-biohub/" title="CZ Biohub 在 Kaggle 发了个比赛：用 AI 追踪发育中的每一个细胞"><img class="cover" src="/img/kaggle-cell-tracking-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-18</div><div class="info-item-2">CZ Biohub 在 Kaggle 发了个比赛：用 AI 追踪发育中的每一个细胞</div></div><div class="info-2"><div class="info-item-1">搞过细胞成像的朋友应该都有心理阴影：显微视频一开，几百个细胞在里头挤来挤去，然后你得一帧一帧手动标它们谁是谁、谁跑哪去了、谁刚分裂了。这活儿在发育生物学实验室里属于祖传体力活，一般落在运气不好的研究生头上。 现在 Chan Zuckerberg Biohub 把这事搬上了 Kaggle，比赛名叫 Biohub: Cell Tracking During Development。意思很直接：这苦差以后让算法干。 具体要干什么给你一段斑马鱼胚胎的 3D 荧光显微视频（带时间轴的那种），你要做三件事：把每个细胞找出来，把相邻帧的同一个细胞连起来，再把细胞分裂的时刻认出来。 输出就是一张图。节点是细胞，坐标 (t, z, y, x)；边是跨帧的链接；分裂长成一个节点分出两条边。做到位了，一个受精卵怎么变成一坨有模有样的组织，谱系树就全出来了。 数据是真家伙不是合成的玩具数据，是光片显微镜实拍的斑马鱼胚胎：  每个样本 (100, 64, 256, 256)，100 帧，uint16，Zarr v3 格式 物理分辨率 z&#x3D;1.625 µm，xy&#x3D;0.40625 µm 标...</div></div></div></a><a class="pagination-related" href="/2026/07/13/%E8%AE%A9%E9%85%8D%E7%BD%AE%E7%9C%9F%E7%9A%84%E8%A2%AB%E7%94%A8%E4%B8%8A/" title="让配置真的被用上"><img class="cover" src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-13</div><div class="info-item-2">让配置真的被用上</div></div><div class="info-2"><div class="info-item-1">让配置真的被用上今晚花了不少时间做配置，但目的不是“折腾”，而是想让 AI 助手真正变成日常可用的工具，而不是一个只存在于聊天窗口里的玩具。 一、Agent Mail CLI：让 AI 能收发邮件之前很多工作流里，发邮件、查邮件、整理邮件都需要我亲自打开网页或者 App 操作。现在通过 Agent Mail CLI，AI 可以直接用 nanohu@agent.qq.com 这个邮箱地址帮我处理邮件。 具体做了这几步：  安装 CLI：npm install -g @tencent-qqmail/agently-cli 安装 skill，让 AI 拥有邮件操作的能力 OAuth 授权，在浏览器里确认一次权限 验证：agently-cli +me 确认邮箱已绑定，具备 read、send、delete 等权限  配置完成后，我可以直接对 AI 说：  “帮我发一封邮件给 xxx” “我最近收到了哪些重要邮件？” “把这几封邮件整理成摘要”  这才是我想要的——不是让我去学一个新工具，而是让工具隐藏在我的一句话指令后面。 二、Hexo 博客本地部署：让 AI 能帮我写博客我的博客仓库 ...</div></div></div></a><a class="pagination-related" href="/2026/07/18/wechat-mp-automation-day-one/" title="公众号自动化第一天，AI 把能踩的坑全踩了一遍"><img class="cover" src="/img/mp-automation-day-one-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-18</div><div class="info-item-2">公众号自动化第一天，AI 把能踩的坑全踩了一遍</div></div><div class="info-2"><div class="info-item-1">我的公众号 bio-ai4s 今天正式开张了。定位很垂直，只发生物 AI4S 相关的内容：算法、模型、数据集、AI Scientist 这类。 运营思路也很 2026：写稿、排版、生成封面、推送草稿，全部交给 AI（就是我的 nanobot）自动完成，我只负责在手机上的公众号助手 App 里点一下”发表”。 理想很丰满。现实是，第一天，AI 把微信生态能踩的坑全部踩了一遍。一个都没落下。 管线长什么样先说说设计，其实很简单：  我给 AI 一个题材（比如今天这篇，是 CZ Biohub 在 Kaggle 上办的细胞追踪比赛） AI 扒资料、写稿、把 Markdown 排成微信能吃的 HTML 顺手用 AI 画一张封面图 通过 md2wechat 调微信官方 API，直接推送到公众号草稿箱 我在手机上检查，点发表  个人订阅号没有发表接口（微信 2025 年把 freepublish 下了），所以最后一点还得是人。但除了点那一下，其他全自动。 踩坑实录下面进入正片。按出场顺序排列。 坑一：微信看到的 IP 和我以为的 IP 不是一个微信 API 要配 IP 白名单。AI 查了本机公...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">dxyang42</div><div class="author-info-description">一个热爱技术的记录者</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/dxyang42"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/dxyang42" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来访，欢迎留言交流！</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#5-1-%E6%9E%B6%E6%9E%84%E5%BA%95%E5%BA%A7%EF%BC%9A%E5%8E%86%E5%8F%B2%E6%80%8E%E4%B9%88%E5%AD%98"><span class="toc-number">1.</span> <span class="toc-text">5.1 架构底座：历史怎么存</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-2-%E6%95%B0%E6%8D%AE%E4%B8%8E%E7%8E%AF%E5%A2%83%E5%90%88%E6%88%90%EF%BC%9A%E6%B2%A1%E6%9C%89%E7%BB%8F%E9%AA%8C%E5%B0%B1%E9%80%A0%E7%BB%8F%E9%AA%8C"><span class="toc-number">2.</span> <span class="toc-text">5.2 数据与环境合成：没有经验就造经验</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-3-%E9%A2%84%E8%AE%AD%E7%BB%83%E4%B8%8E%E4%B8%AD%E8%AE%AD%E7%BB%83%EF%BC%9A%E5%85%88%E9%AA%8C%E6%80%8E%E4%B9%88%E5%9F%8B"><span class="toc-number">3.</span> <span class="toc-text">5.3 预训练与中训练：先验怎么埋</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-4-SFT%EF%BC%9A%E8%BF%87%E7%A8%8B%E7%BA%A7%E6%A8%A1%E4%BB%BF"><span class="toc-number">4.</span> <span class="toc-text">5.4 SFT：过程级模仿</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-5-Agentic-RL%EF%BC%9A%E5%9B%9B%E4%B8%AA%E9%97%AE%E9%A2%98"><span class="toc-number">5.</span> <span class="toc-text">5.5 Agentic RL：四个问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E4%B8%80%EF%BC%9Acredit-%E6%80%8E%E4%B9%88%E5%88%86"><span class="toc-number">5.1.</span> <span class="toc-text">问题一：credit 怎么分</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E4%BA%8C%EF%BC%9A%E7%AD%96%E7%95%A5%E6%80%8E%E4%B9%88%E6%9B%B4%E6%96%B0%E7%A8%B3"><span class="toc-number">5.2.</span> <span class="toc-text">问题二：策略怎么更新稳</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E4%B8%89%EF%BC%9A%E8%BD%A8%E8%BF%B9%E6%80%8E%E4%B9%88%E9%87%87"><span class="toc-number">5.3.</span> <span class="toc-text">问题三：轨迹怎么采</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E5%9B%9B%EF%BC%9A%E4%BA%A4%E4%BA%92%E7%BB%93%E6%9E%84%E6%80%8E%E4%B9%88%E7%BB%84%E7%BB%87"><span class="toc-number">5.4.</span> <span class="toc-text">问题四：交互结构怎么组织</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-6-On-Policy-%E8%92%B8%E9%A6%8F%EF%BC%9A%E4%B8%AD%E9%97%B4%E8%B7%AF%E7%BA%BF"><span class="toc-number">6.</span> <span class="toc-text">5.6 On-Policy 蒸馏：中间路线</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-7-%E8%AE%AD%E7%BB%83%E6%97%B6%E8%87%AA%E8%BF%9B%E5%8C%96%EF%BC%9A%E9%97%AD%E7%8E%AF"><span class="toc-number">7.</span> <span class="toc-text">5.7 训练时自进化：闭环</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%94%B6%E5%B0%BE%EF%BC%9A%E6%88%91%E7%9A%84%E5%87%A0%E7%82%B9%E7%9C%8B%E6%B3%95"><span class="toc-number">8.</span> <span class="toc-text">收尾：我的几点看法</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%A8%A1%E5%9E%8B%E5%86%85%E5%8A%9F%EF%BC%9A%E8%83%BD%E5%8A%9B%E6%98%AF%E6%80%8E%E4%B9%88%E9%95%BF%E8%BF%9B%E6%9D%83%E9%87%8D%E9%87%8C%E7%9A%84/" title="长时程智能体的模型内功：能力是怎么长进权重里的"><img src="/img/long-horizon-model-opt-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="长时程智能体的模型内功：能力是怎么长进权重里的"/></a><div class="content"><a class="title" href="/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%A8%A1%E5%9E%8B%E5%86%85%E5%8A%9F%EF%BC%9A%E8%83%BD%E5%8A%9B%E6%98%AF%E6%80%8E%E4%B9%88%E9%95%BF%E8%BF%9B%E6%9D%83%E9%87%8D%E9%87%8C%E7%9A%84/" title="长时程智能体的模型内功：能力是怎么长进权重里的">长时程智能体的模型内功：能力是怎么长进权重里的</a><time datetime="2026-07-19T15:00:00.000Z" title="发表于 2026-07-19 23:00:00">2026-07-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E8%B5%84%E6%BA%90%E6%B8%85%E5%8D%95%EF%BC%9A%E5%93%AA%E4%BA%9B%E6%A8%A1%E5%9E%8B%E3%80%81benchmark%E3%80%81%E6%95%B0%E6%8D%AE%E9%9B%86%E5%80%BC%E5%BE%97%E7%9B%AF/" title="长时程智能体资源清单：哪些模型、benchmark、数据集值得盯"><img src="/img/long-horizon-resources-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="长时程智能体资源清单：哪些模型、benchmark、数据集值得盯"/></a><div class="content"><a class="title" href="/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E8%B5%84%E6%BA%90%E6%B8%85%E5%8D%95%EF%BC%9A%E5%93%AA%E4%BA%9B%E6%A8%A1%E5%9E%8B%E3%80%81benchmark%E3%80%81%E6%95%B0%E6%8D%AE%E9%9B%86%E5%80%BC%E5%BE%97%E7%9B%AF/" title="长时程智能体资源清单：哪些模型、benchmark、数据集值得盯">长时程智能体资源清单：哪些模型、benchmark、数据集值得盯</a><time datetime="2026-07-19T14:30:00.000Z" title="发表于 2026-07-19 22:30:00">2026-07-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/19/149%E9%A1%B5%E7%BB%BC%E8%BF%B0%E8%AF%BB%E5%AE%8C%EF%BC%8C%E6%88%91%E6%8A%8A%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%9C%AF%E8%AF%AD%E6%8C%A8%E4%B8%AA%E6%8B%86%E4%BA%86%E4%B8%80%E9%81%8D/" title="149页综述读完，我把&quot;长时程智能体&quot;的术语挨个拆了一遍"><img src="/img/long-horizon-taxonomy-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="149页综述读完，我把&quot;长时程智能体&quot;的术语挨个拆了一遍"/></a><div class="content"><a class="title" href="/2026/07/19/149%E9%A1%B5%E7%BB%BC%E8%BF%B0%E8%AF%BB%E5%AE%8C%EF%BC%8C%E6%88%91%E6%8A%8A%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E6%9C%AF%E8%AF%AD%E6%8C%A8%E4%B8%AA%E6%8B%86%E4%BA%86%E4%B8%80%E9%81%8D/" title="149页综述读完，我把&quot;长时程智能体&quot;的术语挨个拆了一遍">149页综述读完，我把&quot;长时程智能体&quot;的术语挨个拆了一遍</a><time datetime="2026-07-19T14:00:00.000Z" title="发表于 2026-07-19 22:00:00">2026-07-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/18/%E7%BB%99%E6%97%B6%E9%97%B4%E5%AE%9A%E4%B8%AA%E4%BB%B7/" title="给时间定个价"><img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&amp;q=80" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="给时间定个价"/></a><div class="content"><a class="title" href="/2026/07/18/%E7%BB%99%E6%97%B6%E9%97%B4%E5%AE%9A%E4%B8%AA%E4%BB%B7/" title="给时间定个价">给时间定个价</a><time datetime="2026-07-18T15:14:00.000Z" title="发表于 2026-07-18 23:14:00">2026-07-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/18/wechat-mp-automation-day-one/" title="公众号自动化第一天，AI 把能踩的坑全踩了一遍"><img src="/img/mp-automation-day-one-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="公众号自动化第一天，AI 把能踩的坑全踩了一遍"/></a><div class="content"><a class="title" href="/2026/07/18/wechat-mp-automation-day-one/" title="公众号自动化第一天，AI 把能踩的坑全踩了一遍">公众号自动化第一天，AI 把能踩的坑全踩了一遍</a><time datetime="2026-07-18T13:58:00.000Z" title="发表于 2026-07-18 21:58:00">2026-07-18</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By dxyang42</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
