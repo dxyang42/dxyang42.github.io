@@ -125,6 +125,7 @@ description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的
 - [（一）149 页综述，先把术语挨个拆清楚](https://dxyang42.github.io/2026/07/19/149页综述读完，我把长时程智能体的术语挨个拆了一遍/)
 - [（二）模型、benchmark、数据集，一份值得收藏的清单](https://dxyang42.github.io/2026/07/19/长时程智能体资源清单：哪些模型、benchmark、数据集值得盯/)
 - [（三）模型内功，能力是怎么长进权重里的](https://dxyang42.github.io/2026/07/19/长时程智能体的模型内功：能力是怎么长进权重里的/)
+- [（四）五大应用领域，九个前沿问题](https://dxyang42.github.io/2026/07/19/长时程智能体的应用地图和九个前沿问题/)
 
 ---
 
