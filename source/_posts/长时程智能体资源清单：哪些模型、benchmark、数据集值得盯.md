@@ -62,7 +62,7 @@ description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的
 ### 通用与生产力
 
 - **GAIA**（2023）：通用助手任务，被引用最多的综合榜之一。
-- **τ-bench**（2025，Sierra）：有状态的工具- agent-用户交互，每次调用会改后端状态，比单次 function calling 评测真实得多。
+- **τ-bench**（2025，Sierra）：有状态的工具-agent-用户交互，每次调用会改后端状态，比单次 function calling 评测真实得多。
 - **AppWorld**（2024）：可控制的应用世界，状态化个人任务。
 - **BFCL**：函数调用榜单，单次调用能力看这。
 - **Toolathlon / MCP-Mark / MCP-Atlas**（2025-2026）：真实 MCP 工具生态下的大规模压测。
@@ -77,7 +77,7 @@ description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的
 **开源通用基座**（搭 agent 的底座）：
 
 - **DeepSeek-V3 / R1**：MLA 架构（论文专门聊了 MLA 是"显式上下文和压缩状态之间的特例"），R1 证明了自验证可以靠规则奖励的 RL 涌现。
-- **Qwen2.5 / Qwen3 / Qwen3-Coder-Next**：后者显式做了面向仓库级理解和 agent 交互的中训练。
+- **Qwen2.5 / Qwen3 / Qwen3-Coder-Next**：后者显式做了面向仓库级理解和 agent 交互的中训练（mid-training）。
 - **GLM-4.5 / GLM-5.2**：GLM-5.2 上了 1M 上下文 + 长程编码场景专门训练。
 - **Kimi K2 / K2.5**：大 MoE + MLA；Kimi Linear 是混合架构（线性路径 + 全局 MLA）的代表。
 
@@ -99,7 +99,7 @@ description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的
 
 ## 四、框架、协议与工具
 
-- **协议层**：**MCP**（工具连接事实标准）、**A2A**（Google，agent 间通信）、**IBM ACP**、**AGENTS.md / Agent Skills**（便携的 harness 配置和技能文件）。
+- **协议层**：**MCP**（工具连接事实标准）、**A2A**（Google，agent 间通信）、**IBM ACP**、**AGENTS.md / Agent Skills**（可移植的 harness 配置和技能文件）。
 - **编排**：**LangGraph**（DAG 编排，状态可恢复可审计）、**AutoGen / Magentic-One**、**MetaGPT**。
 - **Agent runtime**：**OpenHands**（持久工作区）、**SWE-agent**（agent-computer interface 的标杆）、**Aider**（repo map 的思路很值得抄）、**OpenManus**、**browser-use**。
 - **记忆**：**MemGPT**（OS 式分页记忆）、**Mem0**、**HippoRAG**（图记忆联想）、**ReasoningBank**（蒸馏可复用推理策略）、**Voyager**（可执行技能库，skill 路线的起点）。
@@ -117,7 +117,7 @@ description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的
 
 做应用的话，我会先盯 **τ-bench、SWE-bench Verified、OSWorld、BrowseComp** 这四个有区分度的榜。框架从 **LangGraph + MCP + 一个记忆方案**起步。看别人报 benchmark，一律先问三样：模型、harness、预算。
 
-做研究的话，值得挖的坑论文 §7 点得挺明白。harness 可迁移性是一个，同一 harness 换个模型排名能差几十分。budget-aware agency 也算一个，现在的 agent 全是预算盲。还有环境合成的保真度，faithfulness 这东西该像成功率一样被显式测量。
+做研究的话，值得挖的坑论文 §7 点得挺明白。harness 可迁移性是一个，同一 harness 换个模型排名能差几十分。budget-aware agency 也算一个，现在的 agent 全是预算盲（budget-blind）。还有环境合成的保真度，faithfulness 这东西该像成功率一样被显式测量。
 
 清单里大部分都有开源仓库，慢慢翻。模型侧的优化细节在[第三篇](https://dxyang42.github.io/2026/07/19/长时程智能体的模型内功：能力是怎么长进权重里的/)里拆了，想让我再深挖哪个方向，留言说。
 
