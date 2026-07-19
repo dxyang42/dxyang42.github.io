@@ -11,11 +11,11 @@ cover: /img/long-horizon-resources-cover.png
 description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的 benchmark、值得关注的开源模型、训练数据集与环境、框架协议，一份可以收藏慢慢用的清单。
 ---
 
-上一篇捋完了《Towards Long-Horizon Agents》这篇 149 页综述的概念体系，这篇干点更实际的：把里面点名的、可以拿来就用的资源整理成清单。
+上一篇把《Towards Long-Horizon Agents》的术语挨个拆了一遍，这篇干点更实际的：把里面点名的、可以拿来就用的资源整理成清单。
 
-综述引用约 900 篇，但真值得收藏的就那么多。我按"评测—模型—数据与环境—框架"四类整理，全部以论文实际提到的为准。
+综述引了差不多 900 篇，但真值得收藏的没那么多。我按"评测—模型—数据与环境—框架"四类整理，全部以论文实际提到的为准。
 
-先说一个读这份清单的正确姿势：论文反复强调，**一个 benchmark 分数反映的是模型 + harness + 训练配方的联合贡献**。所以看榜单别只看模型名，要看它套的什么 scaffold、给了多少预算，否则分数根本没法横向比。
+看榜单之前有句话得先放这：论文反复强调，**一个 benchmark 分数反映的是模型 + harness + 训练配方的联合贡献**。只看模型名没意义，得看它套的什么 scaffold、给了多少预算，不然分数没法横向比。
 
 ## 一、Benchmark：按五个应用领域分
 
@@ -113,13 +113,13 @@ description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的
 2. **long-horizon-agents.github.io**：项目主页，图做得比 PDF 里还清楚。
 3. **metr.org/time-horizons**：时间跨度测量的源头，隔几个月看一次 frontier 数字更新。
 
-## 我的使用建议
+## 我自己的用法
 
-如果你是做应用的：先盯 **τ-bench、SWE-bench Verified、OSWorld、BrowseComp** 这四个有区分度的榜，框架从 **LangGraph + MCP + 一个记忆方案**起步，benchmark 报告一律问"模型、harness、预算各是什么"。
+做应用的话，我会先盯 **τ-bench、SWE-bench Verified、OSWorld、BrowseComp** 这四个有区分度的榜。框架从 **LangGraph + MCP + 一个记忆方案**起步。看别人报 benchmark，一律先问三样：模型、harness、预算。
 
-如果你是做研究的：值得挖的坑在论文 §7 点得很明白：harness 可迁移性（同一 harness 换个模型排名能差几十分）、budget-aware agency（现在 agent 全是预算盲）、环境合成的保真度（faithfulness 该像成功率一样被显式测量）。
+做研究的话，值得挖的坑论文 §7 点得挺明白。harness 可迁移性是一个，同一 harness 换个模型排名能差几十分。budget-aware agency 也算一个，现在的 agent 全是预算盲。还有环境合成的保真度，faithfulness 这东西该像成功率一样被显式测量。
 
-清单里大部分东西都有开源仓库，慢慢翻。有想让我深挖哪个方向的，留言说。
+清单里大部分都有开源仓库，慢慢翻。想让我深挖哪个方向，留言说。
 
 ---
 
