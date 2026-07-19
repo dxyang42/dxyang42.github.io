@@ -13,7 +13,7 @@ description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的
 
 这个系列的[第一篇](https://dxyang42.github.io/2026/07/19/149页综述读完，我把长时程智能体的术语挨个拆了一遍/)把《Towards Long-Horizon Agents》的术语挨个拆了一遍，这篇干点更实际的：把里面点名的、可以拿来就用的资源整理成清单。
 
-综述引了差不多 900 篇，但真值得收藏的没那么多。我按"评测—模型—数据与环境—框架"四类整理，全部以论文实际提到的为准。
+综述引了差不多 900 篇，但真值得收藏的没那么多。我按“评测—模型—数据与环境—框架”四类整理，全部以论文实际提到的为准。
 
 看榜单之前有句话得先放这：论文反复强调，**一个 benchmark 分数反映的是模型 + harness + 训练配方的联合贡献**。只看模型名没意义，得看它套的什么 scaffold、给了多少预算，不然分数没法横向比。
 
@@ -24,7 +24,7 @@ description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的
 - **SWE-bench / SWE-bench Verified**（2024，OpenAI 人工筛的 500 题版）：仓库级 issue 修复，事实标准。
 - **SWE-bench Pro**（2025.09，Scale AI）：更长程的企业级仓库任务。
 - **Terminal-Bench 2.0**（2025.11）：难且真实的命令行任务，Kimi K3 那篇博客里我也提过它。
-- **OctoBench**（2026）：scaffold 感知的指令遵循评测，专门把"模型 vs 脚手架"的归因拆开来，这个方向很重要。
+- **OctoBench**（2026）：scaffold 感知的指令遵循评测，专门把“模型 vs 脚手架”的归因拆开来，这个方向很重要。
 - **DebugBench**（2024，清华）：多语言 bug 诊断。
 - **NL2Repo-Bench / RepoZero**：从零生成整个仓库，测的是超长程生成。
 - 训练向环境：**SWE-Gym**、**SWE-smith**、**R2E**，从真实仓库/issue/commit 重建可执行任务，拿来训练用。
@@ -76,7 +76,7 @@ description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的
 
 **开源通用基座**（搭 agent 的底座）：
 
-- **DeepSeek-V3 / R1**：MLA 架构（论文专门聊了 MLA 是"显式上下文和压缩状态之间的特例"），R1 证明了自验证可以靠规则奖励的 RL 涌现。
+- **DeepSeek-V3 / R1**：MLA 架构（论文专门聊了 MLA 是“显式上下文和压缩状态之间的特例”），R1 证明了自验证可以靠规则奖励的 RL 涌现。
 - **Qwen2.5 / Qwen3 / Qwen3-Coder-Next**：后者显式做了面向仓库级理解和 agent 交互的中训练（mid-training）。
 - **GLM-4.5 / GLM-5.2**：GLM-5.2 上了 1M 上下文 + 长程编码场景专门训练。
 - **Kimi K2 / K2.5**：大 MoE + MLA；Kimi Linear 是混合架构（线性路径 + 全局 MLA）的代表。
@@ -94,7 +94,7 @@ description: Towards Long-Horizon Agents 综述资源篇：五类应用领域的
 - **轨迹数据**：**TOUCAN**（真实 MCP 环境的大规模工具轨迹）、**AgentInstruct / AgentTuning**、**Agent-FLAN**、**AgentBank**、**OpenResearcher**（深度研究轨迹）。跨数据集统一 schema 看 **Agent Data Protocol (ADP)**。
 - **合成任务生成**：WebShaper、WebSailor（知识图谱游走 + 信息遮蔽）、TaskCraft、AgentSynth、SWE-smith、CLI-Gym。
 - **可执行环境**（既能评测也能训练）：WebArena、OSWorld、SWE-Gym、Terminal-Bench、TheAgentCompany、AppWorld、τ-bench。
-- **SFT 精选小集**：LIMO（817 条）、s1（1K），"少即是多"路线的代表。
+- **SFT 精选小集**：LIMO（817 条）、s1（1K），“少即是多”路线的代表。
 - **预训练语料**（自己做 mid-training 的话）：DataComp-LM、FineWeb、Dolma、OLMo。
 
 ## 四、框架、协议与工具
