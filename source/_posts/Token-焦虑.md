@@ -34,8 +34,8 @@ cover: /img/token-anxiety-cover.png
 | --- | --- | --- |
 | Kimi 订阅 | 199 元封顶 | 199 元（附带冻结黑盒） |
 | DeepSeek V4 Pro 官方按量 | 输入 3 元/M，缓存命中 0.025 元/M，输出 6 元/M | 250 到 350 元 |
-| AiHubMix 的 GLM coding 专线 | 输入 0.06 美元/M，输出 0.22 美元/M | 约 160 元 |
-| AiHubMix 免费档（GLM、MiniMax 的 coding-free 版） | 0 | 0 元，代价是限速排队 |
+| GLM coding 专线（第三方平台） | 输入 0.06 美元/M，输出 0.22 美元/M | 约 160 元 |
+| 免费档（GLM、MiniMax 都有 coding-free 版） | 0 | 0 元，代价是限速排队 |
 
 结论有点反直觉。DeepSeek 按量在我这个用量下，并不比订阅便宜。3 亿 tokens 一个月，按量就是给订阅打工。
 
