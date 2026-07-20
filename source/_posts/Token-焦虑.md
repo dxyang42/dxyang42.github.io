@@ -70,3 +70,5 @@ cover: /img/token-anxiety-cover.png
 想清楚再用，大概就是行业挤泡沫的方式。
 
 也是我挤自己水分的方式。
+
+顺带一提，写完这篇博客，我的 agent 正好烧了 6M token。按缓存价折算，成本不到两块钱。
