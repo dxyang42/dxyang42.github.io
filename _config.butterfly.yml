@@ -148,7 +148,7 @@ aside:
     category: true
   card_author:
     enable: true
-    description: 一个热爱技术的记录者
+    description: agi在李白的诗里没有记载
     button:
       enable: true
       icon: fab fa-github
