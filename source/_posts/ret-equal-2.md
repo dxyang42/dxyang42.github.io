@@ -23,11 +23,9 @@ WeChat send text error (ret=-2, errcode=0): prepare failed
 
 ret=-2。搜了一下，最多的说法是「限流」。但不对，限流是频率太高才会触发，我这个一天就发一条，哪来的频率问题。而且我手动跟 nanobot 聊天完全正常，只有定时任务发不出去。
 
-继续查，在腾讯云社区翻到一篇文章[《AI Agent 接入微信 Bot 排坑实战手册》](https://cloud.tencent.com/developer/article/2679907)，里面有段话看得我直拍大腿：
+继续查，在腾讯云社区翻到一篇文章[《AI Agent 接入微信 Bot 排坑实战手册》](https://cloud.tencent.com/developer/article/2679907)，里面有段话正好解释了这个问题：
 
 > iLink 协议里，stale context_token（过期的会话上下文令牌）和真正的限流，报错都是 ret=-2。光看错误码你根本分不出来。
-
-破案了。
 
 微信 Bot 的底层协议叫 iLink。每次对话有一个 context_token，相当于会话的「钥匙」。这个 token 的有效期很短，官方说是 90 秒左右。但正常聊天的时候你不会感知到，因为对方每发一条消息，都会顺便给你一把新钥匙，无缝续期。
 
