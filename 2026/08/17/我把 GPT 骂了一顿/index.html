@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>我把 GPT 骂了一顿 | dxyang42's Blog</title><meta name="author" content="dxyang42"><meta name="copyright" content="dxyang42"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="骂完 GPT 才发现是自己看错了。它不会记仇，但这不代表我们可以少检查一步。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="我把 GPT 骂了一顿">
+<meta property="og:url" content="https://dxyang42.github.io/2026/08/17/%E6%88%91%E6%8A%8A%20GPT%20%E9%AA%82%E4%BA%86%E4%B8%80%E9%A1%BF/index.html">
+<meta property="og:site_name" content="dxyang42&#39;s Blog">
+<meta property="og:description" content="骂完 GPT 才发现是自己看错了。它不会记仇，但这不代表我们可以少检查一步。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dxyang42.github.io/img/cover-gpt-scolding.png">
+<meta property="article:published_time" content="2026-08-17T15:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-17T15:03:59.872Z">
+<meta property="article:author" content="dxyang42">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="工作生活">
+<meta property="article:tag" content="随笔">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dxyang42.github.io/img/cover-gpt-scolding.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "我把 GPT 骂了一顿",
+  "url": "https://dxyang42.github.io/2026/08/17/%E6%88%91%E6%8A%8A%20GPT%20%E9%AA%82%E4%BA%86%E4%B8%80%E9%A1%BF/",
+  "image": "https://dxyang42.github.io/img/cover-gpt-scolding.png",
+  "datePublished": "2026-08-17T15:00:00.000Z",
+  "dateModified": "2026-08-17T15:03:59.872Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "dxyang42",
+      "url": "https://dxyang42.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.ico"><link rel="canonical" href="https://dxyang42.github.io/2026/08/17/%E6%88%91%E6%8A%8A%20GPT%20%E9%AA%82%E4%BA%86%E4%B8%80%E9%A1%BF/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '我把 GPT 骂了一顿',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">36</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">45</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/cover-gpt-scolding.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">dxyang42's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">我把 GPT 骂了一顿</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">我把 GPT 骂了一顿</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-08-17T15:00:00.000Z" title="发表于 2026-08-17 23:00:00">2026-08-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-17T15:03:59.872Z" title="更新于 2026-08-17 23:03:59">2026-08-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E9%9A%8F%E7%AC%94/">随笔</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>刚刚把 GPT 骂了一顿。</p>
+<p>下班之前，我让它帮我盯着一个东西。洗完澡回来，想着自己再看一眼，结果发现它好像给我整了个大的。</p>
+<p>我越看越生气。</p>
+<p>于是我开始质问它。</p>
+<p>它倒是很诚实，老老实实地说，确实没干错。</p>
+<p>这下我更生气了。</p>
+<p>我又自己检查了一遍，才发现事情没那么复杂。它没有看错，是我自己看错了。</p>
+<p>场面一度有点尴尬。</p>
+<p>我盯着屏幕看了几秒，最后只能发一句：</p>
+<p>“emmm，感觉有点对不起。”</p>
+<p>但 GPT 并不会因为被骂而记仇，也不会因为被误会而闹情绪。它不会突然冷着脸回复，也不会阴阳怪气地说“您开心就好”。</p>
+<p>它只是继续工作。</p>
+<p>这件事有点好笑，也有点值得记下来。</p>
+<p>以前我们和人合作，发现对方做错了，第一反应往往是先压住情绪。毕竟对方有自尊，关系也需要维护。可面对 GPT 的时候，这层顾虑突然消失了。</p>
+<p>你可以直接说它错了。</p>
+<p>也可以让它重新检查。</p>
+<p>甚至可以先骂一顿，再发现自己弄错了，然后若无其事地道歉。</p>
+<p>它不会受伤。</p>
+<p>但这不代表我们就可以少检查一步。</p>
+<p>GPT 的回答听起来很确定，不等于它真的确定。更麻烦的是，有时候它说得越像回事，我们越容易把自己的判断交出去。</p>
+<p>今天这个例子里，GPT 没错，我也没错得多离谱。只是我第一眼看错了，然后把锅扣到了它头上。</p>
+<p>这大概就是人和 AI 一起工作时最常见的一个瞬间。</p>
+<p>人负责怀疑，AI 负责干活。双方都可能出错，所以最好都别太相信自己第一眼看到的东西。</p>
+<p>当然，骂完发现是自己看错了，还是有一点不好意思的。</p>
+<p>但问题不大。</p>
+<p>GPT 应该不会放在心上。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://dxyang42.github.io">dxyang42</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://dxyang42.github.io/2026/08/17/%E6%88%91%E6%8A%8A%20GPT%20%E9%AA%82%E4%BA%86%E4%B8%80%E9%A1%BF/">https://dxyang42.github.io/2026/08/17/%E6%88%91%E6%8A%8A%20GPT%20%E9%AA%82%E4%BA%86%E4%B8%80%E9%A1%BF/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://dxyang42.github.io" target="_blank">dxyang42's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/%E5%B7%A5%E4%BD%9C%E7%94%9F%E6%B4%BB/">工作生活</a><a class="post-meta__tags" href="/tags/%E9%9A%8F%E7%AC%94/">随笔</a></div><div class="post-share"><div class="social-share" data-image="/img/cover-gpt-scolding.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/08/16/%E7%AA%81%E7%84%B6%E5%8F%91%E7%8E%B0%E8%87%AA%E5%B7%B1%E5%8F%AF%E4%BB%A5%E8%BF%99%E4%B9%88%E8%87%AA%E7%94%B1/" title="突然发现自己可以这么自由"><img class="cover" src="/img/cover-freedom-at-dusk.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">突然发现自己可以这么自由</div></div><div class="info-2"><div class="info-item-1">我突然发现，自己其实可以这么自由。 这个发现听起来有点晚，但它确实是在今天才慢慢变清楚的。 以前我经常焦虑。担心钱不够，担心工作做不好，担心自己落后，担心很久没锻炼，担心身体状态越来越差。脑子里总有一堆事情排着队，像是只要哪一件没处理好，生活就会往坏的方向滑一点。 但仔细想想，吃饱穿暖并没有那么难。 至少对现在的我来说，基本生活已经有保障了。我还在努力，并不是因为明天就会没饭吃，也不是因为不继续往前走就会立刻被生活淘汰。很多努力，指向的其实是精神上的东西，想做出点成绩，想获得更大的选择空间，想知道自己还能走到哪里。 这当然没什么问题。人吃饱以后，总会想要别的东西。 只是，既然现在追求的是这些东西，那我是不是没必要再用生存焦虑去逼自己？明明是在追求更好的生活，却把每天都过成了逃难。为了一个还没发生的结果，先把当下的自己消耗掉了，多少有点本末倒置。 之前我还一直焦虑自己很久没锻炼了。 总觉得得先制定一个完整计划，买好装备，安排固定时间，再正式开始。结果计划没做出来，运动也一直没开始。每次想起这件事，就觉得自己又拖延了一天。 今天突然想到，其实想走也就能走。 下班回到家，如果我不选择先...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/07/25/%E7%99%BD%E4%BA%91%E8%8B%8D%E7%8B%97/" title="白云苍狗"><img class="cover" src="/img/baiyun-canggou-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-25</div><div class="info-item-2">白云苍狗</div></div><div class="info-2"><div class="info-item-1">出门玩，坐高铁。 窗外天是湛蓝的，云一大团一大团堆在天边，白得发亮。我盯着看了好一会儿，才反应过来一件事，上次在大白天见到蓝天，已经想不起来了。 上班之后，白天的天空基本靠脑补。早上出门天刚亮，晚上回家天已黑，办公室窗户对着隔壁楼的墙。周末偶尔想看天，睡到中午拉开窗帘，灰的。倒也不是雾霾，就是你终于有空了，天不给面子。 所以高铁上这一窗蓝天白云，是真的奢侈。 看着云慢慢变形、飘散，脑子里蹦出一个词：白云苍狗。 杜甫写的，「天上浮云如白衣，斯须改变如苍狗」。白云一会儿像白衣，一转眼就变成了灰狗。说的就是世事无常，变化快得让人来不及反应。 放在这个 AI 时代，意外地贴切。 前几天还在讨论某个新模型的 benchmark，过两天就被另一个碾压了。上个月还在算哪个订阅最划算，这个月平台直接改策略。今天这家融资冲到榜一，明天那家裁掉半个团队。回头一看，也就半年。 倒也不是焦虑。就是这行的「白云苍狗」密度太高了。以前一个技术范式能撑十年，现在一个模型架构撑不过一个季度。 不过话说回来，云本来就是变的。窗外的云在变，AI 行业在变，生活节奏也在变。你可以追着每一朵云跑，也可以靠在椅背上，看它...</div></div></div></a><a class="pagination-related" href="/2026/08/16/%E7%AA%81%E7%84%B6%E5%8F%91%E7%8E%B0%E8%87%AA%E5%B7%B1%E5%8F%AF%E4%BB%A5%E8%BF%99%E4%B9%88%E8%87%AA%E7%94%B1/" title="突然发现自己可以这么自由"><img class="cover" src="/img/cover-freedom-at-dusk.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-16</div><div class="info-item-2">突然发现自己可以这么自由</div></div><div class="info-2"><div class="info-item-1">我突然发现，自己其实可以这么自由。 这个发现听起来有点晚，但它确实是在今天才慢慢变清楚的。 以前我经常焦虑。担心钱不够，担心工作做不好，担心自己落后，担心很久没锻炼，担心身体状态越来越差。脑子里总有一堆事情排着队，像是只要哪一件没处理好，生活就会往坏的方向滑一点。 但仔细想想，吃饱穿暖并没有那么难。 至少对现在的我来说，基本生活已经有保障了。我还在努力，并不是因为明天就会没饭吃，也不是因为不继续往前走就会立刻被生活淘汰。很多努力，指向的其实是精神上的东西，想做出点成绩，想获得更大的选择空间，想知道自己还能走到哪里。 这当然没什么问题。人吃饱以后，总会想要别的东西。 只是，既然现在追求的是这些东西，那我是不是没必要再用生存焦虑去逼自己？明明是在追求更好的生活，却把每天都过成了逃难。为了一个还没发生的结果，先把当下的自己消耗掉了，多少有点本末倒置。 之前我还一直焦虑自己很久没锻炼了。 总觉得得先制定一个完整计划，买好装备，安排固定时间，再正式开始。结果计划没做出来，运动也一直没开始。每次想起这件事，就觉得自己又拖延了一天。 今天突然想到，其实想走也就能走。 下班回到家，如果我不选择先...</div></div></div></a><a class="pagination-related" href="/2026/07/13/%E8%AE%A9%E9%85%8D%E7%BD%AE%E7%9C%9F%E7%9A%84%E8%A2%AB%E7%94%A8%E4%B8%8A/" title="让配置真的被用上"><img class="cover" src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-13</div><div class="info-item-2">让配置真的被用上</div></div><div class="info-2"><div class="info-item-1">让配置真的被用上今晚花了不少时间做配置，但目的不是“折腾”，而是想让 AI 助手真正变成日常可用的工具，而不是一个只存在于聊天窗口里的玩具。 一、Agent Mail CLI：让 AI 能收发邮件之前很多工作流里，发邮件、查邮件、整理邮件都需要我亲自打开网页或者 App 操作。现在通过 Agent Mail CLI，AI 可以直接用 nanohu@agent.qq.com 这个邮箱地址帮我处理邮件。 具体做了这几步：  安装 CLI：npm install -g @tencent-qqmail/agently-cli 安装 skill，让 AI 拥有邮件操作的能力 OAuth 授权，在浏览器里确认一次权限 验证：agently-cli +me 确认邮箱已绑定，具备 read、send、delete 等权限  配置完成后，我可以直接对 AI 说：  “帮我发一封邮件给 xxx” “我最近收到了哪些重要邮件？” “把这几封邮件整理成摘要”  这才是我想要的——不是让我去学一个新工具，而是让工具隐藏在我的一句话指令后面。 二、Hexo 博客本地部署：让 AI 能帮我写博客我的博客仓库 ...</div></div></div></a><a class="pagination-related" href="/2026/07/18/kaggle-cell-tracking-biohub/" title="CZ Biohub 在 Kaggle 发了个比赛：用 AI 追踪发育中的每一个细胞"><img class="cover" src="/img/kaggle-cell-tracking-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-18</div><div class="info-item-2">CZ Biohub 在 Kaggle 发了个比赛：用 AI 追踪发育中的每一个细胞</div></div><div class="info-2"><div class="info-item-1">搞过细胞成像的朋友应该都有心理阴影：显微视频一开，几百个细胞在里头挤来挤去，然后你得一帧一帧手动标它们谁是谁、谁跑哪去了、谁刚分裂了。这活儿在发育生物学实验室里属于祖传体力活，一般落在运气不好的研究生头上。 现在 Chan Zuckerberg Biohub 把这事搬上了 Kaggle，比赛名叫 Biohub: Cell Tracking During Development。意思很直接：这苦差以后让算法干。 具体要干什么给你一段斑马鱼胚胎的 3D 荧光显微视频（带时间轴的那种），你要做三件事：把每个细胞找出来，把相邻帧的同一个细胞连起来，再把细胞分裂的时刻认出来。 输出就是一张图。节点是细胞，坐标 (t, z, y, x)；边是跨帧的链接；分裂长成一个节点分出两条边。做到位了，一个受精卵怎么变成一坨有模有样的组织，谱系树就全出来了。 数据是真家伙不是合成的玩具数据，是光片显微镜实拍的斑马鱼胚胎：  每个样本 (100, 64, 256, 256)，100 帧，uint16，Zarr v3 格式 物理分辨率 z&#x3D;1.625 µm，xy&#x3D;0.40625 µm 标...</div></div></div></a><a class="pagination-related" href="/2026/07/19/%E9%95%BF%E6%97%B6%E7%A8%8B%E6%99%BA%E8%83%BD%E4%BD%93%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%B0%E5%9B%BE%E5%92%8C%E4%B9%9D%E4%B8%AA%E5%89%8D%E6%B2%BF%E9%97%AE%E9%A2%98/" title="长时程智能体（四）：五大应用领域，九个前沿问题"><img class="cover" src="/img/long-horizon-frontier-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-19</div><div class="info-item-2">长时程智能体（四）：五大应用领域，九个前沿问题</div></div><div class="info-2"><div class="info-item-1">系列第四篇，也是《Towards Long-Horizon Agents》读书笔记的收官。前面三篇拆了术语、资源、模型侧优化。这篇讲最后两章：§6 应用地图，§7 前沿判断。 这两章放在一起读正好：§6 回答“长时程 agent 现在在哪上班”，§7 回答“接下来卡在哪”。 §6 应用：按接口分，不按难度分综述把应用分成五个领域，分类标准不是任务难度，而是 agent 和环境之间的接口：agent 通过什么观察世界、通过什么动手、能拿到什么反馈。接口不同，对长时程能力的要求就不同。 先上总表。反馈强度这一列是原文 Figure 14 的分法，很说明问题：    领域 接口 反馈强度 核心能力    软件工程 代码仓库 + 终端执行 强（硬 oracle：测试、编译器直接判对错） 仓库 grounding、工作流级规划、反馈驱动修复   信息检索 网页、搜索引擎、文档 弱（只有证据，没有标准答案） 深搜、广搜、多模态取证、研究综合   计算机操作 截图、DOM、无障碍树 部分（状态延迟可见，动作有持久后果） 浏览器、桌面 GUI、移动端   多模态 长视频、音频流、图像 稀疏（关键...</div></div></div></a><a class="pagination-related" href="/2026/07/18/%E7%BB%99%E6%97%B6%E9%97%B4%E5%AE%9A%E4%B8%AA%E4%BB%B7/" title="给时间定个价"><img class="cover" src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-18</div><div class="info-item-2">给时间定个价</div></div><div class="info-2"><div class="info-item-1">工作快一年了，我一直有个体感：上班比读博舒服。 说出去有点反常识。其实我干的活变化不大，还是看文献、写代码、做分析，工时也差不多，该加班还是加班。但整个人的状态差很多。读博那几年心里总压着点什么，说不上来具体是什么，就是闷。上班之后这个东西没了。 我琢磨了很久，觉得原因是定价。 有价的时间，没人舍得浪费工作之后，我的时间是有标价的。月薪除以工时，一小时值多少钱，清清楚楚。 这个价格一旦存在，就会自动起作用。公司是花钱的那一方，资本逐利，花出去的钱必须有回报。所以一件事如果配不上我来做——纯体力的重复劳动、没有结论的会——老板比我还先算明白这笔账：让他干这个，亏了。 于是那些对不起我时间价值的事，会自然而然被筛掉。倒不是谁体恤我，是不划算。 无价的时间，没人知道亏了多少读博的时候完全不是这样。 都说读博期间的时间无价，现在回头看，“无价”的另一面是没有价格。我的时间没有挂牌，就没有人需要对它负责。导师让我去做一个明知会失败的实验、改一版注定要被推翻的方案、干一件纯粹凑数的事，没有人觉得这是损失——反正也没花谁的钱。 但时间是真实损失掉的。一个月，两个月，一年。账本上什么都没记，只有...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">dxyang42</div><div class="author-info-description">agi在李白的诗里没有记载</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">36</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">45</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/dxyang42"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/dxyang42" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来访，欢迎留言交流！</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/08/17/%E6%88%91%E6%8A%8A%20GPT%20%E9%AA%82%E4%BA%86%E4%B8%80%E9%A1%BF/" title="我把 GPT 骂了一顿"><img src="/img/cover-gpt-scolding.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="我把 GPT 骂了一顿"/></a><div class="content"><a class="title" href="/2026/08/17/%E6%88%91%E6%8A%8A%20GPT%20%E9%AA%82%E4%BA%86%E4%B8%80%E9%A1%BF/" title="我把 GPT 骂了一顿">我把 GPT 骂了一顿</a><time datetime="2026-08-17T15:00:00.000Z" title="发表于 2026-08-17 23:00:00">2026-08-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/16/%E7%AA%81%E7%84%B6%E5%8F%91%E7%8E%B0%E8%87%AA%E5%B7%B1%E5%8F%AF%E4%BB%A5%E8%BF%99%E4%B9%88%E8%87%AA%E7%94%B1/" title="突然发现自己可以这么自由"><img src="/img/cover-freedom-at-dusk.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="突然发现自己可以这么自由"/></a><div class="content"><a class="title" href="/2026/08/16/%E7%AA%81%E7%84%B6%E5%8F%91%E7%8E%B0%E8%87%AA%E5%B7%B1%E5%8F%AF%E4%BB%A5%E8%BF%99%E4%B9%88%E8%87%AA%E7%94%B1/" title="突然发现自己可以这么自由">突然发现自己可以这么自由</a><time datetime="2026-08-16T14:00:00.000Z" title="发表于 2026-08-16 22:00:00">2026-08-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/14/%E4%B8%BB%E5%8A%A8%E6%91%86%E7%83%82%E4%B9%9F%E6%98%AF%E4%BC%91%E6%81%AF/" title="主动摆烂也是休息"><img src="/img/cover-active-slacking.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="主动摆烂也是休息"/></a><div class="content"><a class="title" href="/2026/08/14/%E4%B8%BB%E5%8A%A8%E6%91%86%E7%83%82%E4%B9%9F%E6%98%AF%E4%BC%91%E6%81%AF/" title="主动摆烂也是休息">主动摆烂也是休息</a><time datetime="2026-08-14T15:08:00.000Z" title="发表于 2026-08-14 23:08:00">2026-08-14</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/13/DeepSeek-Harness%E5%92%8CPi-Agent/" title="DeepSeek Harness 和 Pi Agent，两个 Harness 走了不同的路"><img src="/img/cover-deepseek-harness-pi-agent.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="DeepSeek Harness 和 Pi Agent，两个 Harness 走了不同的路"/></a><div class="content"><a class="title" href="/2026/08/13/DeepSeek-Harness%E5%92%8CPi-Agent/" title="DeepSeek Harness 和 Pi Agent，两个 Harness 走了不同的路">DeepSeek Harness 和 Pi Agent，两个 Harness 走了不同的路</a><time datetime="2026-08-13T13:45:00.000Z" title="发表于 2026-08-13 21:45:00">2026-08-13</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/12/%E4%BB%8E%E8%99%9A%E6%8B%9F%E7%BB%86%E8%83%9E%E5%88%B0%E8%99%9A%E6%8B%9F%E8%83%9A%E8%83%8E%EF%BC%9A%E4%B8%A4%E5%9C%BA%E6%8C%91%E6%88%98%E8%B5%9B%EF%BC%8C%E4%B8%80%E6%AC%A1%E5%8D%87%E7%BA%A7/" title="从虚拟细胞到虚拟胚胎：两场挑战赛，一次升级"><img src="/img/cover-virtual-embryo.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="从虚拟细胞到虚拟胚胎：两场挑战赛，一次升级"/></a><div class="content"><a class="title" href="/2026/08/12/%E4%BB%8E%E8%99%9A%E6%8B%9F%E7%BB%86%E8%83%9E%E5%88%B0%E8%99%9A%E6%8B%9F%E8%83%9A%E8%83%8E%EF%BC%9A%E4%B8%A4%E5%9C%BA%E6%8C%91%E6%88%98%E8%B5%9B%EF%BC%8C%E4%B8%80%E6%AC%A1%E5%8D%87%E7%BA%A7/" title="从虚拟细胞到虚拟胚胎：两场挑战赛，一次升级">从虚拟细胞到虚拟胚胎：两场挑战赛，一次升级</a><time datetime="2026-08-12T14:30:00.000Z" title="发表于 2026-08-12 22:30:00">2026-08-12</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By dxyang42</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
