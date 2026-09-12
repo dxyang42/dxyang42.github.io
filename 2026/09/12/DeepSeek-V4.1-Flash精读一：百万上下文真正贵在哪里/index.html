@@ -1,0 +1,210 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里 | dxyang42's Blog</title><meta name="author" content="dxyang42"><meta name="copyright" content="dxyang42"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="从 prefill、运行时 KV、持久 KV 与数据搬运四条成本线，拆解百万上下文真正昂贵的地方。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里">
+<meta property="og:url" content="https://dxyang42.github.io/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%80%EF%BC%9A%E7%99%BE%E4%B8%87%E4%B8%8A%E4%B8%8B%E6%96%87%E7%9C%9F%E6%AD%A3%E8%B4%B5%E5%9C%A8%E5%93%AA%E9%87%8C/index.html">
+<meta property="og:site_name" content="dxyang42&#39;s Blog">
+<meta property="og:description" content="从 prefill、运行时 KV、持久 KV 与数据搬运四条成本线，拆解百万上下文真正昂贵的地方。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dxyang42.github.io/img/deepseek-v41/cover-01.webp">
+<meta property="article:published_time" content="2026-09-12T12:49:00.000Z">
+<meta property="article:modified_time" content="2026-09-12T12:52:27.332Z">
+<meta property="article:author" content="dxyang42">
+<meta property="article:tag" content="DeepSeek">
+<meta property="article:tag" content="KV Cache">
+<meta property="article:tag" content="大模型">
+<meta property="article:tag" content="长上下文">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dxyang42.github.io/img/deepseek-v41/cover-01.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里",
+  "url": "https://dxyang42.github.io/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%80%EF%BC%9A%E7%99%BE%E4%B8%87%E4%B8%8A%E4%B8%8B%E6%96%87%E7%9C%9F%E6%AD%A3%E8%B4%B5%E5%9C%A8%E5%93%AA%E9%87%8C/",
+  "image": "https://dxyang42.github.io/img/deepseek-v41/cover-01.webp",
+  "datePublished": "2026-09-12T12:49:00.000Z",
+  "dateModified": "2026-09-12T12:52:27.332Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "dxyang42",
+      "url": "https://dxyang42.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.ico"><link rel="canonical" href="https://dxyang42.github.io/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%80%EF%BC%9A%E7%99%BE%E4%B8%87%E4%B8%8A%E4%B8%8B%E6%96%87%E7%9C%9F%E6%AD%A3%E8%B4%B5%E5%9C%A8%E5%93%AA%E9%87%8C/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">45</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">59</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/deepseek-v41/cover-01.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">dxyang42's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-09-12T12:49:00.000Z" title="发表于 2026-09-12 20:49:00">2026-09-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-12T12:52:27.332Z" title="更新于 2026-09-12 20:52:27">2026-09-12</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/">人工智能</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>“支持 1M 上下文”，现在很容易被读成一句简单的话：模型能一次塞进去一百万个 token。</p>
+<p>但工程上真正该问的不是“塞不塞得进”，而是：<strong>塞进去以后，算一次要多少钱，放在哪里，下一轮怎么取，取出来又要搬多远？</strong></p>
+<p>DeepSeek-V4.1-Flash 技术报告最值得读的地方，不只是它把窗口做到 1M，而是它把长上下文成本拆成了一个完整系统问题。Attention FLOPs 当然重要，但它只是账单中的一项。Prefill 的计算、在线推理时常驻的 global KV、为了前缀复用而长期保存的 persistent KV，以及 HBM、主机内存、SSD 和互连带宽，合在一起才决定百万上下文是否真的用得起。</p>
+<p>这一篇先把这张账单理清。具体怎么压，留到后面逐项拆。</p>
+<h2 id="系列目录"><a href="#系列目录" class="headerlink" title="系列目录"></a>系列目录</h2><ol>
+<li><a href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%80%EF%BC%9A%E7%99%BE%E4%B8%87%E4%B8%8A%E4%B8%8B%E6%96%87%E7%9C%9F%E6%AD%A3%E8%B4%B5%E5%9C%A8%E5%93%AA%E9%87%8C/">DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里</a></li>
+<li><a href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%BA%8C%EF%BC%9ACED%E5%92%8CCSA2%E5%A6%82%E4%BD%95%E9%87%8D%E5%81%9A%E9%95%BF%E4%B8%8A%E4%B8%8B%E6%96%87%E6%9E%B6%E6%9E%84/">DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构</a></li>
+<li><a href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%89%EF%BC%9A%E6%8A%8A%E6%8C%81%E4%B9%85KV%E7%BC%93%E5%AD%98%E5%8E%8B%E5%88%B0%E5%85%AB%E5%88%86%E4%B9%8B%E4%B8%80/">DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一</a></li>
+<li><a href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E5%9B%9B%EF%BC%9A%E6%B2%A1%E6%9C%89%E6%96%B0RL%E7%AE%97%E6%B3%95%EF%BC%8CAgent%E4%B8%BA%E4%BD%95%E5%8F%98%E5%BC%BA/">DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强</a></li>
+<li><a href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%BA%94%EF%BC%9A%E6%88%90%E7%BB%A9%E3%80%81%E6%8E%A8%E7%90%86%E6%97%8B%E9%92%AE%E4%B8%8E%E7%9C%9F%E5%AE%9E%E8%BE%B9%E7%95%8C/">DeepSeek-V4.1-Flash 精读（五）：成绩、推理旋钮与真实边界</a></li>
+</ol>
+<h2 id="先别急着谈-FLOPs：两种-KV-不是一回事"><a href="#先别急着谈-FLOPs：两种-KV-不是一回事" class="headerlink" title="先别急着谈 FLOPs：两种 KV 不是一回事"></a>先别急着谈 FLOPs：两种 KV 不是一回事</h2><p>理解成本之前，先把报告里的两个词分开：<strong>runtime KV</strong> 和 <strong>persistent KV</strong>。</p>
+<p>Runtime KV 是当前请求正在运行时要用的缓存。DeepSeek-V4 的注意力由两部分组成：一条看完整上下文的 global attention，另一条只看固定窗口的 Sliding-Window Attention（SWA）。SWA 的窗口固定，所以它占用的缓存不会随着整段序列无限增长；上下文足够长以后，真正占大头的是 global KV，包括 main KV 和用于索引的 indexer K。</p>
+<p>这部分缓存服务时要随时参与计算，因此受 HBM 容量约束。HBM 快，但贵，而且空间有限。上下文从几千涨到一百万 token，哪怕每个 token 只多占一点，乘完都会变成一个很大的常驻量。</p>
+<p>Persistent KV 则是另一笔账。它不是“这一刻做 decode 必须驻留在显存里的缓存”，而是为了以后复用某段前缀，把部分 KV 长期保存下来。它通常待在 SSD 或主机内存里，约束来自存储容量；等请求需要复用时，还要把数据加载、迁移到计算侧，因此又受 I&#x2F;O 和互连带宽约束。</p>
+<p>简单说：<strong>runtime KV 解决“现在算什么”，persistent KV 解决“以后别重算什么”。</strong> 前者主要卡 HBM，后者主要卡 SSD 和主机内存，但两者都会把压力传给数据搬运。</p>
+<p>这一区分很关键。只说“KV Cache 降了多少”是不够的，因为你可能省了显存，却没有省下持久化容量；也可能少存了 SSD，却用大量重算把 prefill 成本重新买回来。</p>
+<h2 id="百万上下文的第一笔钱：Prefill"><a href="#百万上下文的第一笔钱：Prefill" class="headerlink" title="百万上下文的第一笔钱：Prefill"></a>百万上下文的第一笔钱：Prefill</h2><p>长上下文请求通常先经历 prefill：把整段输入读一遍，建立后续生成需要的状态。Agent 工作负载越来越“输入重”，历史对话、工具返回、代码、图片和文档不断累积，输出可能只是一小段，但输入已经非常长。</p>
+<p>所以即便单 token decode 很省，首次吞下一百万 token 仍然不是免费的。报告直接把 prefill 称为计算昂贵的环节。DeepSeek-V4.1-Flash 的应对方式，是使用 Causal Encoder-Decoder（CED）架构：prefill 每个 token 激活 8B 参数，decode 每个 token 激活 16B 参数。</p>
+<p>这里也容易误读。模型有 552B backbone 参数，另外还有 196B Engram 参数，但 MoE 模型不会每个 token 把所有参数都跑一遍。对部署成本更直接的数字，是每个阶段实际激活多少参数。把输入最重的 prefill 压到 8B，针对的正是长时程 Agent 那种“大量读、少量写”的负载结构。</p>
+<p><img src="/img/deepseek-v41/fig01-overview.png" alt="DeepSeek-V4.1-Flash 的 Agent 基准成绩与历代全局 KV Cache 对比"></p>
+<p><em>来源：DeepSeek-V4.1-Flash 技术报告</em></p>
+<h2 id="第二笔钱：运行时-Global-KV-要一直占着-HBM"><a href="#第二笔钱：运行时-Global-KV-要一直占着-HBM" class="headerlink" title="第二笔钱：运行时 Global KV 要一直占着 HBM"></a>第二笔钱：运行时 Global KV 要一直占着 HBM</h2><p>Attention 计算做稀疏以后，一个反直觉现象会越来越明显：<strong>算力压力降下来了，存储压力反而显眼了。</strong></p>
+<p>因为只要全局分支还要从百万 token 中找信息，就得保留足够的全局状态。它未必对每个 token 做完整的两两 attention，但 global KV 仍会随序列长度增长。请求活着，它就要占着高价值的 HBM；并发请求一多，能同时服务多少条长会话，先被缓存容量卡住。</p>
+<p>V4.1-Flash 把 global KV 压到 <strong>890 bytes&#x2F;token</strong>，约为 V4-Flash 的 <strong>1&#x2F;4</strong>。按线性关系做一个直观换算，一百万 token 对应的 global KV 约 890 MB。这个数字已经比前代小很多，但它依然说明：1M 不是界面上的一个开关，而是一段真实占用高速存储的状态。</p>
+<p>我认为 890 bytes&#x2F;token 比“支持 1M”更值得部署者盯住。窗口上限说明能力边界，每 token 缓存量才更接近容量规划：同样一块 HBM，究竟能放几个请求、留多少空间给权重与运行时、并发还能不能上去，都绕不开它。</p>
+<h2 id="第三笔钱：Persistent-KV-把成本延伸到-SSD"><a href="#第三笔钱：Persistent-KV-把成本延伸到-SSD" class="headerlink" title="第三笔钱：Persistent KV 把成本延伸到 SSD"></a>第三笔钱：Persistent KV 把成本延伸到 SSD</h2><p>长时程 Agent 不只跑一次。相同系统提示、固定知识前缀、已经完成的长轨迹，都可能希望下次直接复用。于是 KV 从一次请求里的临时状态，变成需要持续管理的资产。</p>
+<p>这时容量问题从 HBM 扩散到 SSD 和主机内存。缓存越大，能保存的前缀越少；保存得再多，如果加载速度跟不上，GPU 还是会等数据。报告因此把 persistent KV、I&#x2F;O 和互连带宽放在同一个部署问题里，而不是只比较 attention 算了多少次乘加。</p>
+<p>V4.1-Flash 的 persistent KV 约为 V4-Flash 的 <strong>1&#x2F;8</strong>。它背后的核心取舍不是一味“全存”或“全重算”，而是只持久化更值得保留的部分，对 SWA 状态采用 bounded replay：需要时只重放最近一个窗口的 token，近似重建缺失状态，用少量 prefill 重算换掉大量长期存储。</p>
+<p>这也揭示了长上下文优化的本质：<strong>计算、存储和带宽不是三道独立题，而是可以互相兑换的三种预算。</strong> 少存一点，可能多算一点；压得更狠，可能降低精度；缓存放得更远，容量便宜了，搬运时间却上来了。</p>
+<h2 id="第四笔钱：Decode-FLOPs-没暴涨，不代表系统成本消失"><a href="#第四笔钱：Decode-FLOPs-没暴涨，不代表系统成本消失" class="headerlink" title="第四笔钱：Decode FLOPs 没暴涨，不代表系统成本消失"></a>第四笔钱：Decode FLOPs 没暴涨，不代表系统成本消失</h2><p>报告的 Figure 2 很抓眼球：上下文从 4K 扩展到 1M，长度增加 256 倍，V4.1-Flash 的单 token decode FLOPs 只增加约 <strong>25%</strong>。图中的计算量还按精度做了加权：BF16、FP8、FP4 分别按 1、0.5、0.25 计。</p>
+<p><img src="/img/deepseek-v41/fig02-decode-flops.png" alt="不同上下文长度下的单 token Decode FLOPs"></p>
+<p><em>来源：DeepSeek-V4.1-Flash 技术报告</em></p>
+<p>这确实说明稀疏与压缩设计有效：decode 端没有随着上下文长度近似线性爆炸。但它不能推出“百万上下文只贵 25%”。这个 25% 描述的是<strong>单 token decode 的加权计算量</strong>，不包含首次 prefill 吞下超长输入的全部代价，也不等于 KV 的 HBM 占用、SSD 持久化空间和缓存迁移时间。</p>
+<p>换句话说，FLOPs 曲线回答“生成下一个 token 要多算多少”，却没有单独回答“为了能生成它，前面那一百万 token 的状态要放在哪、保存多久、何时搬过来”。后面这些，往往才是线上系统的吞吐瓶颈。</p>
+<h2 id="为什么带宽会成为隐藏账单"><a href="#为什么带宽会成为隐藏账单" class="headerlink" title="为什么带宽会成为隐藏账单"></a>为什么带宽会成为隐藏账单</h2><p>缓存不在计算设备上时，容量问题就会变成搬运问题。Persistent KV 放在 SSD 或主机内存里，确实比一直挤占 HBM 便宜；但请求再次命中这段前缀时，缓存必须被加载并迁移。报告明确指出，I&#x2F;O 与互连带宽会限制这个过程。</p>
+<p>这意味着“已经缓存”不等于“立刻可用”。如果迁移赶不上计算，设备会等缓存；如果大量长请求同时恢复，数据通道还会互相争用。即使单 token 的理论 FLOPs 很漂亮，端到端延迟与吞吐也可能由最慢的数据路径决定。</p>
+<p>报告提到的系统处理方式很有代表性：把长生命周期的 global KV 与短生命周期的 encoder SWA KV 分开管理，缺失的 SWA 状态再通过 bounded replay 近似重建。我的理解是，这不是普通的显存优化，而是在给不同寿命、不同复用价值的状态安排不同层级。长上下文部署最终拼的，不只是模型会不会算，还包括系统知不知道什么值得常驻、什么值得落盘、什么重算更便宜。</p>
+<h2 id="真正的成本公式，是一条链"><a href="#真正的成本公式，是一条链" class="headerlink" title="真正的成本公式，是一条链"></a>真正的成本公式，是一条链</h2><p>如果把报告的判断压成一句话，我会写成：</p>
+<blockquote>
+<p>百万上下文成本 &#x3D; Prefill 计算 + Runtime KV 的 HBM 占用 + Persistent KV 的存储占用 + KV 加载与迁移的带宽开销。</p>
+</blockquote>
+<p>其中任何一项没处理好，1M 都可能只是“单请求能跑”，而不是“高并发、可复用、成本可控地跑”。V4.1-Flash 的路线也因此不是单点优化：CED 降 prefill 激活量，CSA2 做跨层 global KV 与索引复用，FP4 继续压 global KV，SWA Bounded Replay 用有限重算换持久化空间，推理系统再配合缓存分层、通信计算重叠和内核融合。</p>
+<p>后续几篇会按这条链逐项展开。第二篇先看 CED：为什么同一个模型在 prefill 激活 8B、decode 激活 16B，以及这种不对称为什么适合输入重的 Agent。再往后看 CSA2、FP4 和 SWA Bounded Replay，分别怎样把运行时与持久 KV 压下来。</p>
+<p>最后要留一个边界：<strong>支持 1M，不等于所有百万 token 任务都可靠。</strong> 技术报告证明的是模型具备这一上下文容量，并给出成本与系统设计；但具体任务能否在百万 token 中稳定找对信息、完成推理、维持多步行为，仍然要看任务结构和实际评测，不能从窗口长度直接推出答案质量。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://dxyang42.github.io">dxyang42</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://dxyang42.github.io/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%80%EF%BC%9A%E7%99%BE%E4%B8%87%E4%B8%8A%E4%B8%8B%E6%96%87%E7%9C%9F%E6%AD%A3%E8%B4%B5%E5%9C%A8%E5%93%AA%E9%87%8C/">https://dxyang42.github.io/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%80%EF%BC%9A%E7%99%BE%E4%B8%87%E4%B8%8A%E4%B8%8B%E6%96%87%E7%9C%9F%E6%AD%A3%E8%B4%B5%E5%9C%A8%E5%93%AA%E9%87%8C/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://dxyang42.github.io" target="_blank">dxyang42's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/DeepSeek/">DeepSeek</a><a class="post-meta__tags" href="/tags/%E5%A4%A7%E6%A8%A1%E5%9E%8B/">大模型</a><a class="post-meta__tags" href="/tags/%E9%95%BF%E4%B8%8A%E4%B8%8B%E6%96%87/">长上下文</a><a class="post-meta__tags" href="/tags/KV-Cache/">KV Cache</a></div><div class="post-share"><div class="social-share" data-image="/img/deepseek-v41/cover-01.webp" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%BA%8C%EF%BC%9ACED%E5%92%8CCSA2%E5%A6%82%E4%BD%95%E9%87%8D%E5%81%9A%E9%95%BF%E4%B8%8A%E4%B8%8B%E6%96%87%E6%9E%B6%E6%9E%84/" title="DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构"><img class="cover" src="/img/deepseek-v41/cover-02.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构</div></div><div class="info-2"><div class="info-item-1">长上下文到底贵在哪里？ 第一反应通常是注意力计算量。但在 Agent 场景里，问题至少有三层：工具调用不断把新结果塞回上下文，缓存一旦没命中，就要重新 prefill；上下文越长，KV Cache 越占 HBM；即使 KV 已经压缩，稀疏注意力还得从很长的历史里找 Top-K，索引本身也会越来越贵。 DeepSeek-V4.1-Flash 的答案不是再加一个孤立技巧，而是把问题拆开：CED 主要砍 prefill 计算，CSA2 主要砍跨层 KV 存储和索引计算。 两者拼起来，才是这代长上下文架构真正值得看的地方。 系列目录 DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里 DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构 DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一 DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强 DeepSeek-V4.1-Flash 精读（五）：成绩、推理旋钮与真实边界  CED 为什么不能理解成传统 ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%BA%8C%EF%BC%9ACED%E5%92%8CCSA2%E5%A6%82%E4%BD%95%E9%87%8D%E5%81%9A%E9%95%BF%E4%B8%8A%E4%B8%8B%E6%96%87%E6%9E%B6%E6%9E%84/" title="DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构"><img class="cover" src="/img/deepseek-v41/cover-02.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-12</div><div class="info-item-2">DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构</div></div><div class="info-2"><div class="info-item-1">长上下文到底贵在哪里？ 第一反应通常是注意力计算量。但在 Agent 场景里，问题至少有三层：工具调用不断把新结果塞回上下文，缓存一旦没命中，就要重新 prefill；上下文越长，KV Cache 越占 HBM；即使 KV 已经压缩，稀疏注意力还得从很长的历史里找 Top-K，索引本身也会越来越贵。 DeepSeek-V4.1-Flash 的答案不是再加一个孤立技巧，而是把问题拆开：CED 主要砍 prefill 计算，CSA2 主要砍跨层 KV 存储和索引计算。 两者拼起来，才是这代长上下文架构真正值得看的地方。 系列目录 DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里 DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构 DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一 DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强 DeepSeek-V4.1-Flash 精读（五）：成绩、推理旋钮与真实边界  CED 为什么不能理解成传统 ...</div></div></div></a><a class="pagination-related" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%89%EF%BC%9A%E6%8A%8A%E6%8C%81%E4%B9%85KV%E7%BC%93%E5%AD%98%E5%8E%8B%E5%88%B0%E5%85%AB%E5%88%86%E4%B9%8B%E4%B8%80/" title="DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一"><img class="cover" src="/img/deepseek-v41/cover-03.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-12</div><div class="info-item-2">DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一</div></div><div class="info-2"><div class="info-item-1">很多模型报告写“缓存减少 8 倍”，读者很容易理解成：把原来的 KV 全部换成更低精度，文件自然变成八分之一。 DeepSeek-V4.1-Flash 不是这么做的。 它先在模型结构和数值精度上，把global KV压到 V4-Flash 的约 1&#x2F;4；再在部署层重新划分“什么值得长期保存”，把短命的 SWA KV 从持久缓存里拿掉，最终让persistent KV降到约 1&#x2F;8。 这两个数字说的是不同口径。一个主要对应运行时、常驻 HBM 的全局缓存；另一个对应为了前缀复用而长期放在 SSD 或主机内存里的持久缓存。把它们混成一句“FP4 带来 8 倍压缩”，既高估 FP4，也错过了这套系统最有价值的判断。 系列目录 DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里 DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构 DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一 DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么...</div></div></div></a><a class="pagination-related" href="/2026/07/30/Nature%E6%96%B0%E5%B7%A5%E5%85%B7Raygun%EF%BC%9A%E7%BB%99%E8%9B%8B%E7%99%BD%E8%B4%A8%E5%81%9A%E7%BC%A9%E6%B0%B4%E5%92%8C%E6%94%B9%E8%A3%85/" title="Nature 新工具 Raygun：给蛋白质做缩水和改装"><img class="cover" src="/img/cover-raygun-2026-07-30.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-30</div><div class="info-item-2">Nature 新工具 Raygun：给蛋白质做缩水和改装</div></div><div class="info-2"><div class="info-item-1">蛋白质设计这个领域，这几年主流思路是 de novo，从头造一个新的。RFdiffusion、ESM-3、Genie 2，一个个工具出来，都是给定目标结构或功能，从噪声出发生成新蛋白。听着很科幻。 但自然进化不这么干。35 亿年的进化，绝大部分时候是在已有蛋白上修修补补：替换几个氨基酸、插入一段序列、删掉一个结构域。与其推倒重建，不如把现成的改一改。 Nature 刚发了一篇 Duke 大学的论文，提出了一个叫 Raygun 的工具，就是走这条路。而且把这条路走到了之前没人到过的地方：替换、插入、删除同时做，一步到位。 问题出在哪儿用蛋白语言模型（比如 ESM-2）给蛋白质做编码已经挺成熟了。一个 500 个氨基酸的蛋白，ESM-2 给它每个残基一个 1280 维的向量，总共就是 500 × 1280 维。问题来了：换个 400 个氨基酸的蛋白，维度就是 400 × 1280。长度不一样，向量空间维度不一样，两个蛋白没法直接比较。 没法直接比较，就做不了插入和删除（indel）这种跨长度的操作。现有的模板改造方法基本只能做替换（substitution），同一个位置换个氨基酸，长...</div></div></div></a><a class="pagination-related" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E5%9B%9B%EF%BC%9A%E6%B2%A1%E6%9C%89%E6%96%B0RL%E7%AE%97%E6%B3%95%EF%BC%8CAgent%E4%B8%BA%E4%BD%95%E5%8F%98%E5%BC%BA/" title="DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强"><img class="cover" src="/img/deepseek-v41/cover-04.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-12</div><div class="info-item-2">DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强</div></div><div class="info-2"><div class="info-item-1">这是 DeepSeek-V4.1-Flash 技术报告精读的第四篇。 系列目录 DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里 DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构 DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一 DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强 DeepSeek-V4.1-Flash 精读（五）：成绩、推理旋钮与真实边界  报告在后训练章节开头先说了一句很不“发布会”的话：这次没有引入新的后训练算法。 配方仍是 SFT、RL，再加 on-policy distillation。优化方法也没有越出成熟做法。报告甚至把判断说得很重：在固定而普通的优化流程下，观测到的增益基本来自合成数据与环境在规模、多样性和可验证性上的改进。 这不是说 RL 不重要，而是说 RL 算法不是这次最稀缺的东西。Agent 要在真实系统里连续行动，首先得有足够多、足够难、能自动判分的任务；还得有跑得起百万级交互的基础设施。没...</div></div></div></a><a class="pagination-related" href="/2026/08/06/%E4%BB%B7%E6%A0%BC%E5%B1%A0%E5%A4%AB%E4%B9%9F%E8%A6%81%E6%B6%A8%E4%BB%B7%E4%BA%86/" title="价格屠夫也要涨价了"><img class="cover" src="/img/cover-deepseek-price-hike.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-06</div><div class="info-item-2">价格屠夫也要涨价了</div></div><div class="info-2"><div class="info-item-1">DeepSeek 今天发了个公告，API 服务定价要整体上调，预计涨幅较大，具体方案以正式通知为准。 一句话，社区炸了。 不怪大家反应大。三个月前，剧情还是另一个方向。 5 月底，DeepSeek 把 V4-Pro 的 2.5 折优惠转成了正式定价，相当于官宣低价不是促销，是长期政策。“价格屠夫”这个人设，算是坐实了。 7 月中旬，峰谷定价来了。工作日高峰时段价格翻倍，凌晨和周末维持原价。 8 月，直接预告整体大幅涨价。 三个月，风向变了三次。稳定个鬼。 涨价前是什么价，都是平峰基准价。    模型 输入（缓存命中） 输入（缓存未命中） 输出    V4-Flash 0.02 元&#x2F;M 1 元&#x2F;M 2 元&#x2F;M   V4-Pro 0.025 元&#x2F;M 3 元&#x2F;M 6 元&#x2F;M   高峰时段全部翻倍，V4-Pro 输出就是 12 元&#x2F;M。 这个价格什么水平。V4-Pro 输出 6 块，比不少国产旗舰便宜一截，但已经不是白菜价了。 当然，DeepSeek 不是个例。这个月 Kimi K3 发布后直接暂停了新用户注册，智谱一...</div></div></div></a><a class="pagination-related" href="/2026/08/13/DeepSeek-Harness%E5%92%8CPi-Agent/" title="DeepSeek Harness 和 Pi Agent，两个 Harness 走了不同的路"><img class="cover" src="/img/cover-deepseek-harness-pi-agent.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">DeepSeek Harness 和 Pi Agent，两个 Harness 走了不同的路</div></div><div class="info-2"><div class="info-item-1">DeepSeek 最近发布了 Harness 开发者预览版 v0.1。它和 DeepSeek-V4-Pro 几乎前后脚出现，很容易被理解成一个官方编程助手，或者“DeepSeek 版 Codex”。 我觉得这个理解不太准确。 DeepSeek Harness 更像一套 Agent Runtime，默认带着 Web、TUI、Headless 和自动化接口，也提供工具、工作流、子 Agent、会话记录和权限策略。它想解决的不是“怎么让模型写几行代码”，而是“怎么把模型稳定地接到真实环境里”。 这件事其实早就有人在做。Pi Agent 就是其中很有代表性的项目。Pi 的介绍很直接，它是一个 minimal agent harness，意思是给你一个尽量小的 Agent 内核，然后让你自己决定它应该长什么样。 一个更重，一个更轻。一个想把整套运行时拆开，一个先给你一把小刀。 Harness 到底是什么模型本身只负责生成下一步。它可以提出调用工具、修改文件、执行命令，但真正让这些动作发生的，是模型外面的那层系统。 这层系统要处理很多琐事。工具怎么注册，命令能不能执行，权限要不要询问，多个只...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">dxyang42</div><div class="author-info-description">agi在李白的诗里没有记载</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">45</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">59</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/dxyang42"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/dxyang42" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来访，欢迎留言交流！</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B3%BB%E5%88%97%E7%9B%AE%E5%BD%95"><span class="toc-number">1.</span> <span class="toc-text">系列目录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E5%88%AB%E6%80%A5%E7%9D%80%E8%B0%88-FLOPs%EF%BC%9A%E4%B8%A4%E7%A7%8D-KV-%E4%B8%8D%E6%98%AF%E4%B8%80%E5%9B%9E%E4%BA%8B"><span class="toc-number">2.</span> <span class="toc-text">先别急着谈 FLOPs：两种 KV 不是一回事</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%99%BE%E4%B8%87%E4%B8%8A%E4%B8%8B%E6%96%87%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AC%94%E9%92%B1%EF%BC%9APrefill"><span class="toc-number">3.</span> <span class="toc-text">百万上下文的第一笔钱：Prefill</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E7%AC%94%E9%92%B1%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6-Global-KV-%E8%A6%81%E4%B8%80%E7%9B%B4%E5%8D%A0%E7%9D%80-HBM"><span class="toc-number">4.</span> <span class="toc-text">第二笔钱：运行时 Global KV 要一直占着 HBM</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E7%AC%94%E9%92%B1%EF%BC%9APersistent-KV-%E6%8A%8A%E6%88%90%E6%9C%AC%E5%BB%B6%E4%BC%B8%E5%88%B0-SSD"><span class="toc-number">5.</span> <span class="toc-text">第三笔钱：Persistent KV 把成本延伸到 SSD</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E5%9B%9B%E7%AC%94%E9%92%B1%EF%BC%9ADecode-FLOPs-%E6%B2%A1%E6%9A%B4%E6%B6%A8%EF%BC%8C%E4%B8%8D%E4%BB%A3%E8%A1%A8%E7%B3%BB%E7%BB%9F%E6%88%90%E6%9C%AC%E6%B6%88%E5%A4%B1"><span class="toc-number">6.</span> <span class="toc-text">第四笔钱：Decode FLOPs 没暴涨，不代表系统成本消失</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%B8%A6%E5%AE%BD%E4%BC%9A%E6%88%90%E4%B8%BA%E9%9A%90%E8%97%8F%E8%B4%A6%E5%8D%95"><span class="toc-number">7.</span> <span class="toc-text">为什么带宽会成为隐藏账单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9C%9F%E6%AD%A3%E7%9A%84%E6%88%90%E6%9C%AC%E5%85%AC%E5%BC%8F%EF%BC%8C%E6%98%AF%E4%B8%80%E6%9D%A1%E9%93%BE"><span class="toc-number">8.</span> <span class="toc-text">真正的成本公式，是一条链</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%80%EF%BC%9A%E7%99%BE%E4%B8%87%E4%B8%8A%E4%B8%8B%E6%96%87%E7%9C%9F%E6%AD%A3%E8%B4%B5%E5%9C%A8%E5%93%AA%E9%87%8C/" title="DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里"><img src="/img/deepseek-v41/cover-01.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里"/></a><div class="content"><a class="title" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%80%EF%BC%9A%E7%99%BE%E4%B8%87%E4%B8%8A%E4%B8%8B%E6%96%87%E7%9C%9F%E6%AD%A3%E8%B4%B5%E5%9C%A8%E5%93%AA%E9%87%8C/" title="DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里">DeepSeek-V4.1-Flash 精读（一）：百万上下文真正贵在哪里</a><time datetime="2026-09-12T12:49:00.000Z" title="发表于 2026-09-12 20:49:00">2026-09-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%BA%8C%EF%BC%9ACED%E5%92%8CCSA2%E5%A6%82%E4%BD%95%E9%87%8D%E5%81%9A%E9%95%BF%E4%B8%8A%E4%B8%8B%E6%96%87%E6%9E%B6%E6%9E%84/" title="DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构"><img src="/img/deepseek-v41/cover-02.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构"/></a><div class="content"><a class="title" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%BA%8C%EF%BC%9ACED%E5%92%8CCSA2%E5%A6%82%E4%BD%95%E9%87%8D%E5%81%9A%E9%95%BF%E4%B8%8A%E4%B8%8B%E6%96%87%E6%9E%B6%E6%9E%84/" title="DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构">DeepSeek-V4.1-Flash 精读（二）：CED 和 CSA2 如何重做长上下文架构</a><time datetime="2026-09-12T12:48:00.000Z" title="发表于 2026-09-12 20:48:00">2026-09-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%89%EF%BC%9A%E6%8A%8A%E6%8C%81%E4%B9%85KV%E7%BC%93%E5%AD%98%E5%8E%8B%E5%88%B0%E5%85%AB%E5%88%86%E4%B9%8B%E4%B8%80/" title="DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一"><img src="/img/deepseek-v41/cover-03.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一"/></a><div class="content"><a class="title" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%B8%89%EF%BC%9A%E6%8A%8A%E6%8C%81%E4%B9%85KV%E7%BC%93%E5%AD%98%E5%8E%8B%E5%88%B0%E5%85%AB%E5%88%86%E4%B9%8B%E4%B8%80/" title="DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一">DeepSeek-V4.1-Flash 精读（三）：把持久 KV 缓存压到八分之一</a><time datetime="2026-09-12T12:47:00.000Z" title="发表于 2026-09-12 20:47:00">2026-09-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E5%9B%9B%EF%BC%9A%E6%B2%A1%E6%9C%89%E6%96%B0RL%E7%AE%97%E6%B3%95%EF%BC%8CAgent%E4%B8%BA%E4%BD%95%E5%8F%98%E5%BC%BA/" title="DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强"><img src="/img/deepseek-v41/cover-04.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强"/></a><div class="content"><a class="title" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E5%9B%9B%EF%BC%9A%E6%B2%A1%E6%9C%89%E6%96%B0RL%E7%AE%97%E6%B3%95%EF%BC%8CAgent%E4%B8%BA%E4%BD%95%E5%8F%98%E5%BC%BA/" title="DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强">DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强</a><time datetime="2026-09-12T12:46:00.000Z" title="发表于 2026-09-12 20:46:00">2026-09-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%BA%94%EF%BC%9A%E6%88%90%E7%BB%A9%E3%80%81%E6%8E%A8%E7%90%86%E6%97%8B%E9%92%AE%E4%B8%8E%E7%9C%9F%E5%AE%9E%E8%BE%B9%E7%95%8C/" title="DeepSeek-V4.1-Flash 精读（五）：成绩、推理旋钮与真实边界"><img src="/img/deepseek-v41/cover-05.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="DeepSeek-V4.1-Flash 精读（五）：成绩、推理旋钮与真实边界"/></a><div class="content"><a class="title" href="/2026/09/12/DeepSeek-V4.1-Flash%E7%B2%BE%E8%AF%BB%E4%BA%94%EF%BC%9A%E6%88%90%E7%BB%A9%E3%80%81%E6%8E%A8%E7%90%86%E6%97%8B%E9%92%AE%E4%B8%8E%E7%9C%9F%E5%AE%9E%E8%BE%B9%E7%95%8C/" title="DeepSeek-V4.1-Flash 精读（五）：成绩、推理旋钮与真实边界">DeepSeek-V4.1-Flash 精读（五）：成绩、推理旋钮与真实边界</a><time datetime="2026-09-12T12:45:00.000Z" title="发表于 2026-09-12 20:45:00">2026-09-12</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By dxyang42</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
