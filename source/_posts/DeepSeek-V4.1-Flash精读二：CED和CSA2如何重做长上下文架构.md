@@ -10,9 +10,9 @@ top_img: /img/deepseek-v41/cover-02.webp
 
 长上下文到底贵在哪里？
 
-第一反应通常是注意力计算量。但在 Agent 场景里，问题至少有三层：工具调用不断把新结果塞回上下文，缓存一旦没命中，就要重新 prefill；上下文越长，KV Cache 越占 HBM；即使 KV 已经压缩，稀疏注意力还得从很长的历史里找 Top-K，索引本身也会越来越贵。
+很多人先想到注意力计算量。放到 Agent 场景里，账还要再算细一点。工具调用会不断把新结果塞回上下文，缓存没命中，就得重新 prefill。上下文越长，KV Cache 占掉的 HBM 越多。就算 KV 已经压缩，稀疏注意力还要从漫长的历史里找 Top-K，索引也会跟着变贵。
 
-DeepSeek-V4.1-Flash 的答案不是再加一个孤立技巧，而是把问题拆开：**CED 主要砍 prefill 计算，CSA2 主要砍跨层 KV 存储和索引计算。** 两者拼起来，才是这代长上下文架构真正值得看的地方。
+DeepSeek-V4.1-Flash 没指望一个技巧包办这些问题。CED 处理 prefill 计算，CSA2 处理跨层 KV 存储和索引计算。两套设计接在一起，才构成这次长上下文架构的主要变化。
 
 ## 系列目录
 
@@ -22,92 +22,92 @@ DeepSeek-V4.1-Flash 的答案不是再加一个孤立技巧，而是把问题拆
 4. [DeepSeek-V4.1-Flash 精读（四）：没有新 RL 算法，Agent 为什么变强](/2026/09/12/DeepSeek-V4.1-Flash精读四：没有新RL算法，Agent为何变强/)
 5. [DeepSeek-V4.1-Flash 精读（五）：成绩、推理旋钮与真实边界](/2026/09/12/DeepSeek-V4.1-Flash精读五：成绩、推理旋钮与真实边界/)
 
-## CED 为什么不能理解成传统 Encoder-Decoder？
+## CED 不是传统的 Encoder-Decoder
 
-先看总图。语言骨干仍然是 40 层 causal Transformer，只是被切成前 20 层 causal encoder 和后 20 层 decoder。
+先看总图。语言骨干还是 40 层 causal Transformer，只是从中间切开：前 20 层是 causal encoder，后 20 层是 decoder，也就是 20+20。
 
 ![DeepSeek-V4.1-Flash 总体架构](/img/deepseek-v41/fig03-architecture.png)
 
 *图源：DeepSeek-V4.1-Flash Technical Report，Figure 3。*
 
-这里最容易产生误会：既然叫 Encoder-Decoder，是不是像机器翻译那样，encoder 双向读“源句子”，decoder 再对“目标句子”做 cross-attention？不是。
+Encoder-Decoder 这个名字很容易让人想到机器翻译：encoder 双向读取“源句子”，decoder 再对“目标句子”做 cross-attention。CED 不是这套结构。它的 encoder 仍然遵守因果掩码，每个位置只能看左边，模型也始终在同一条序列上自回归生成。
 
-CED 的 encoder 仍然是**因果的**。每个位置只能看见它左边的内容，整个模型仍在同一条序列上做自回归生成。它没有把输入和输出拆成两套语义空间，也不是传统 seq2seq。更准确的理解是：DeepSeek 把一条 40 层因果网络沿深度切成上下两段，并重新规定了全局 KV 在两段之间怎么产生。
+可以把它理解成一条 40 层因果网络沿深度切成两段，然后重新安排全局 KV 的生产方式。普通 Transformer 做 prefill 时，prompt 里的每个 token 都要走完 40 层。长上下文 Agent 调一次工具，新增内容又可能带来一轮大 prefill，这部分计算很重。
 
-问题来了：普通 Transformer 在 prefill 时，提示词中的每个 token 都要跑完 40 层。长上下文 Agent 每调用一次工具，新增内容又可能触发一轮大 prefill，这笔账非常重。
+CED 让 decoder 的全局 KV 不再从各层自己的隐藏状态生成。第 20 层的输出，也就是最终 encoder states，会被交给后面的 decoder。每个 decoder 层都有自己的投影参数，可以从同一份 encoder states 生成本层需要的 Main KV 和对应的压缩权重。输入虽然相同，20 个 decoder 层拿到的全局 KV 仍然可以不同。
 
-CED 的做法是让 decoder 的**全局 KV**不再由每个 decoder 层自己的隐藏状态生成。对第 20 层输出，也就是最终 encoder states，decoder 各层使用自己的投影参数，直接生成该层需要的 main KV，以及相应的压缩权重。于是，同一份固定的 encoder states 可以为 20 个 decoder 层提供各自不同的全局 KV。
+这样一来，prompt prefill 的主体只用完整跑过前 20 层 encoder。进入 decode 后，历史 prompt 的 encoder states 已经固定。decoder 从这些状态投影全局 KV，再结合当前生成 token 逐层计算。
 
-所以在主干意义上，prompt prefill 只需要完整跑前 20 层 encoder。进入 decode 后，历史 prompt 对应的 encoder states 已经固定，decoder 用这些状态投影出的全局 KV，再结合当前生成 token 逐层计算。它省掉的不是“20 层模型”，而是**让绝大多数 prompt token 不必完整穿过后 20 层 decoder**。
+这里省下的不是后半个模型。准确地说，是大部分 prompt token 不用再完整穿过后 20 层 decoder。报告给出的计算口径是 prefill 约 8B、decode 约 16B；两者对应的执行阶段不同，不能把它理解成整个模型始终只激活 8B 参数。
 
-论文给出的复杂度很直观。普通 prefill 近似是：
+论文给出的复杂度也很直观。普通 prefill 近似为：
 
 $$O(NL)$$
 
-CED 则变成：
+CED 变成：
 
 $$O(NL/2+n_{win}L/2)\approx O(NL/2),\quad N\gg n_{win}$$
 
-为什么后面还有一项？因为 CED 没把所有东西都跨层冻结。
+后面为什么还留着一项？因为 decoder 里还有一部分状态不能直接从 encoder 借来。
 
-## 全局上下文可以借，局部上下文不能偷懒
+## 全局上下文能复用，局部窗口还得逐层算
 
-V4.1-Flash 的注意力可以看成两条支路：一条是跨越长历史的 global branch，另一条是只看附近 token 的 Sliding-Window Attention，也就是 SWA。
+V4.1-Flash 的注意力有两条支路。一条是跨越长历史的 global branch，另一条只看附近 token，也就是 Sliding-Window Attention（SWA）。
 
-CED 改写的是前者。decoder 的全局 KV 可以从最后一层 encoder states 投影出来。但 SWA KV 仍然是 layer-local 的：每一层都要基于该层自己的隐藏状态生成，不能拿第 20 层的结果替代第 37 层。
+CED 改的是全局分支。decoder 的全局 KV 可以从最后一层 encoder states 投影出来，SWA KV 仍然属于各层。第 37 层的局部状态，要基于第 37 层自己的隐藏状态生成，不能拿第 20 层的结果直接顶上。
 
-这也是“prefill 只跑 encoder”需要加的一句限定：**长 prompt 的主体只跑 encoder；为了恢复 decoder 各层的局部状态，还要对最后 $n_{win}$ 个 token 做 Decoder SWA Bounded Replay。** 它不是把 decoder 在 prefill 阶段彻底删除，而是把 decoder 工作量限制在固定窗口，不再随完整上下文长度一起增长。
+所以“prefill 只跑 encoder”要带一个限定：长 prompt 的主体只跑 encoder，但最后 $n_{win}$ 个 token 还要做 Decoder SWA Bounded Replay，用来补回 decoder 各层的局部状态。decoder 没有从 prefill 阶段消失，它的工作量被压在一个固定窗口里，不再跟完整上下文一起增长。
 
-我认为这是 CED 最聪明的取舍。全局分支负责“远处有什么”，允许复用；局部分支负责“最近几步怎么演化”，保留逐层深度。它没有为了省计算，把两种信息处理方式一起压扁。
+这个取舍挺干净。全局分支回答“远处有哪些内容”，适合复用；局部分支保留最近几步的逐层变化。省计算的同时，没有把两种信息处理方式一起压平。
 
-把一次请求按时间展开，会更容易理解。假设 Agent 已经积累了一段很长的对话，又收到一份工具返回。新增和未缓存的 prompt token 先经过 20 层 causal encoder，得到第 20 层隐藏状态。各 decoder 层再用各自的投影，把这批状态变成自己需要的全局 KV；局部窗口则通过有限 replay 补齐。开始生成后，新 token 仍然依次通过完整 decoder，使用自己的 query 读取那批由 encoder states 建好的历史全局 KV，并持续更新本层 SWA KV。
+按一次 Agent 请求顺下来会更好懂。假设对话已经很长，又收到一份工具返回。新增且没有缓存的 prompt token 先走 20 层 causal encoder，得到第 20 层隐藏状态。各 decoder 层用自己的投影，把这批状态变成本层的全局 KV。局部窗口则靠有限 replay 补齐。
 
-因此，“decode 利用固定 encoder states”不等于生成阶段只算一次 decoder，也不等于 decoder 的隐藏状态被冻结。固定的是历史 prompt 的 encoder 表示及其所提供的全局记忆底座；每个新 token 在 decoder 中的状态、Main Q、局部 KV 和注意力输出仍然逐层变化。CED 节省的是把历史 prompt 反复送过 decoder 的成本，不是取消 decoder 对新 token 的深层推理。
+开始生成后，每个新 token 仍然依次经过完整 decoder。它用自己的 query 读取从 encoder states 建好的历史全局 KV，同时持续更新本层 SWA KV。
 
-这也解释了为什么它特别适合输入重、输出相对短的 Agent 请求。如果每一轮都塞进大量工具日志，却只生成少量动作，省下 prompt 的 20 层计算很划算；反过来，如果任务几乎没有输入、只做超长生成，prefill 优势在总成本中的占比自然会下降。
+“decode 使用固定 encoder states”只描述历史底座。固定的是历史 prompt 的 encoder 表示，以及它提供的全局记忆。新 token 在 decoder 中的隐藏状态、Main Q、局部 KV 和注意力输出，依旧会一层层变化。CED 少算的是历史 prompt 反复穿过 decoder 的成本，decoder 对新 token 的深层处理还在。
 
-## CSA2 又在压什么？
+这也说明了它更适合输入重、输出相对短的 Agent 请求。每轮塞进大量工具日志，只生成少量动作，prompt 少走 20 层就很划算。任务如果几乎没有输入，只做很长的连续生成，prefill 优势在总成本里的占比自然会降低。
 
-CED 解决了 prompt 要跑多少层，但长上下文还要常驻大量缓存。
+## CSA2 接着处理缓存
 
-CSA2 把注意力所需的状态明确拆成两类：
+CED 缩短了 prompt 要走的路径，长上下文仍有大量状态需要常驻。
 
-- **Main KV**：承载压缩后的全局历史，供稀疏检索和核心注意力读取；
-- **SWA KV**：每层自己的局部窗口状态，负责最近上下文。
+CSA2 把注意力状态分成两类：
 
-每个 query 先由轻量 indexer 在 Main KV 中选出 Top-K，再把选中的 Main KV 与本层 SWA KV 拼起来做核心注意力。也就是说，Main KV 负责“远而少”，SWA KV 负责“近而全”。
+- Main KV：压缩后的全局历史，供稀疏检索和主注意力读取；
+- SWA KV：每层自己的局部窗口状态，负责最近上下文。
 
-CSA2 相比上一代 CSA 还简化了压缩器：压缩率为 $m$ 时，每 $m$ 个 token 形成一个 Main KV entry，不再用相邻压缩项之间重叠的 $2m$ 个输入，也去掉了压缩时的绝对位置编码；Indexer K 则直接从 Main KV 投影，不再另走一条从隐藏状态出发的压缩路径。
+每个 query 先由轻量 indexer 在 Main KV 中挑出 Top-K，再把选中的 Main KV 和本层 SWA KV 拼在一起做注意力。简单说，Main KV 管“远而少”，SWA KV 管“近而全”。
 
-但真正关键的不是这些局部简化，而是它把“共享缓存”和“复用选择结果”拆成了两件事。
+和上一代 CSA 相比，CSA2 还把压缩器做得更简单。压缩率为 $m$ 时，每 $m$ 个 token 形成一个 Main KV entry。它不再用相邻压缩项之间重叠的 $2m$ 个输入，也去掉了压缩阶段的绝对位置编码。Indexer K 直接从 Main KV 投影，不再单独走一条从隐藏状态开始的压缩路径。
 
-## Full、Reindex、Reuse：不要把两种复用混在一起
+这些局部变化之外，CSA2 还拆开了两种容易混淆的复用：缓存可以跨层共享，Top-K 的选择结果也可以跨层复用。它们不是同一件事。
+
+## Full、Reindex、Reuse 各自省什么
 
 ![CSA2 的三种工作模式](/img/deepseek-v41/fig04-csa2-modes.png)
 
 *图源：DeepSeek-V4.1-Flash Technical Report，Figure 4。*
 
-CSA2 的每一层会被静态指定为三种模式之一。
+CSA2 会把每一层静态指定为 Full、Reindex、Reuse 三种模式之一。
 
-**Full Mode** 什么都自己做。它生成本层 Main KV，计算 Indexer Q，并由 Main KV 投影 Indexer K，然后对可见历史打分，产出新的 Top-K。它既是新的缓存起点，也是新的索引起点。
+Full Mode 所有步骤都自己完成。它生成本层 Main KV，计算 Indexer Q，再从 Main KV 投影 Indexer K，对可见历史打分并产出新的 Top-K。后面的层可以从这里开始共享缓存，也可以复用这次索引。
 
-**Reindex Mode** 不生成新的 Main KV，也不生成新的 Indexer K，而是沿用前面最近一个 Full 层的那一套缓存。但它会计算自己的 Indexer Q，重新给共享的 Indexer K 打分，得到本层新的 Top-K。
+Reindex Mode 沿用前面最近一个 Full 层的 Main KV 和 Indexer K，不再生成一套新的缓存。不过它有自己的 Indexer Q，会重新给共享的 Indexer K 打分，因此可以得到本层自己的 Top-K。
 
-**Reuse Mode** 更进一步。它复用最近可用的 Main KV，也复用针对这份 Main KV 最近一次算出的 Top-K，来源可以是 Full，也可以是 Reindex。它不计算 Indexer Q，不重新评分，直接拿这个选择做注意力。
+Reuse Mode 连这次重排也省了。它复用最近可用的 Main KV，也复用针对这份 Main KV 最近算出的 Top-K。这个 Top-K 可以来自 Full，也可以来自 Reindex。Reuse 不计算 Indexer Q，不重新评分，直接用已有选择做注意力。
 
-三种模式仍然都会计算本层自己的 Main Q 和 SWA KV。
+三种模式都会计算本层自己的 Main Q 和 SWA KV，这部分没有跨层拿走。
 
-这里必须分清两个概念。
+把账分开看就清楚了。共享 Main KV / Indexer K，减少的是缓存，多层不用各存一份全局状态。复用 Top-K indices，减少的是索引计算，这一层不用再判断该看历史中的哪些位置。
 
-**共享 Main KV / Indexer K**，省的是缓存：多个层不再各存一份全局状态。**复用 Top-K indices**，省的是索引计算：这一层不再重新问“该看历史里的哪些位置”。Reindex 正好证明两者可以解耦——它共享缓存，却保留自己的选择；Reuse 才连选择结果一起拿来。
+Reindex 正好卡在两者中间：它共享缓存，但保留本层的选择。到了 Reuse，缓存和选择结果才一起沿用。只用“跨层共享 KV”概括 CSA2，会漏掉索引复用；只提“跨层复用 Top-K”，又解释不了缓存为什么缩小。
 
-如果把 CSA2 只总结成“跨层共享 KV”，就漏掉了一半；如果只说“跨层复用 Top-K”，又解释不了缓存为什么会变小。
+## 890 bytes/token 怎么来的
 
-## 890 bytes/token 是三条轴一起乘出来的
+论文报告，V4.1-Flash 的 global KV 常驻 HBM 开销降到 890 bytes/token，约为 V4-Flash 的四分之一。这个结果来自几条轴一起缩减，不能归到某一种量化格式头上。
 
-论文报告，V4.1-Flash 的 global KV 常驻 HBM 开销降到 **890 bytes/token**，约为 V4-Flash 的四分之一。这个数字不该被理解成某一个神奇量化格式的功劳。
-
-对长上下文占主导的全局缓存，可以用下面这个结构理解，而不要把它误写成三个百分比相加：
+对长上下文占主导的全局缓存，可以先用下面的结构理解：
 
 $$
 \text{bytes/token}\propto
@@ -118,36 +118,38 @@ $$
 \underbrace{b}_{\text{每元素字节数}}
 $$
 
-这里 $m$ 是每个 Main KV entry 汇聚的 token 数；$s$ 表示相邻 Full 缓存起点的大致共享间隔，间隔越大，需要独立保存的 Main KV / Indexer K 组越少；$b$ 是缓存精度对应的字节成本。FP4 把 main KV 从 FP8 的约 1 byte/element 降到约 0.5 byte/element，实际格式还包含分组 scale，不能粗暴宣称“任何缓存都严格再除以二”。Indexer K 在 V4 已使用 FP4，SWA KV 也仍保留 FP8，因此 890 是具体架构配置下的最终值，不是把 $1/m$、$1/s$、$1/2$ 随手一乘就能反推出来的万能公式。
+$m$ 是每个 Main KV entry 汇聚的 token 数。$s$ 表示相邻 Full 缓存起点的大致共享间隔；间隔越大，要独立保存的 Main KV / Indexer K 组就越少。$b$ 是缓存精度对应的字节成本。
 
-我更愿意把这三条轴叫作：**少存位置、少存层、每份少占字节。** CSA2 覆盖前两条，FP4 补上第三条。
+FP4 把 Main KV 从 FP8 的约 1 byte/element 降到约 0.5 byte/element。不过实际格式还带有分组 scale，不能直接说“任何缓存都严格减半”。Indexer K 在 V4 里已经使用 FP4，SWA KV 也仍然保留 FP8。因此，890 bytes/token 是具体架构配置算出的最终值，不能拿 $1/m$、$1/s$、$1/2$ 随手相乘，再当成通用公式。
 
-## Top-K 少算几次还不够，搜索范围也得缩
+这三条轴可以记成一句话：少存位置，少存层，每份少占字节。CSA2 覆盖前两条，FP4 补上第三条。
 
-即使 Reuse 层完全不跑 indexer，Full 和 Reindex 层仍可能面对百万 token。只要每次都扫描全部因果可见位置，剩下的索引仍会线性增长。
+## Top-K 少算几层，搜索范围还是太大
+
+Reuse 层可以完全不跑 indexer，但 Full 和 Reindex 层面对的仍可能是百万 token。只要每次都扫过全部因果可见位置，留下来的索引计算还是会随上下文线性增长。
 
 ![Hierarchical Sparse Indexer](/img/deepseek-v41/fig05-hierarchical-indexer.png)
 
 *图源：DeepSeek-V4.1-Flash Technical Report，Figure 5。*
 
-Hierarchical Sparse Indexer 的做法分两步。
+Hierarchical Sparse Indexer 用了两步。
 
-Decoder 中第一个 Full Mode 层仍然扫描完整可见范围，选出自己最终注意力使用的 Top-512。同时，它按 block 聚合：每个 block 取其中最大的 index score，再选高分 block，组成一个比 Top-K 更大的 candidate pool。论文示例是 2,048 个 block、每块 8 个位置，也就是 16,384 个候选位置。
+decoder 里的第一个 Full Mode 层仍然扫描完整可见范围，选出最终用于注意力的 Top-512。同时，它会按 block 聚合：每个 block 取最大的 index score，再挑出高分 block，组成一个比 Top-K 更大的 candidate pool。论文示例用了 2,048 个 block，每块 8 个位置，一共 16,384 个候选位置。
 
-后续 Reindex 层不再扫描完整上下文，只在这 16,384 个候选里各自重排并选自己的 Top-512。Reuse 层照旧不索引，直接沿用最近的 Top-K。这样，共享的是候选池，各 Reindex 层的最终选择仍可以不同。
+后面的 Reindex 层不再扫描完整上下文。它们只在这 16,384 个候选里各自重排，再选出自己的 Top-512。Reuse 层照旧不做索引，直接沿用最近一次 Top-K。大家共享的是候选池，各个 Reindex 层最后看到的位置仍然可以不同。
 
-必须强调：**Hierarchical Sparse Indexer 只用于 CED 的 decoder。** 第一层 Full 依然要做一次全范围扫描，它不是让所有索引都变成常数成本；它让后续 indexer 在候选池大小固定时，单 query 的评分量不再随上下文长度增长。并且这套候选限制在 post-training 和推理中一致使用，不是部署时临时硬剪。
+这里有三条限制要记住。第一，Hierarchical Sparse Indexer 只用在 CED 的 decoder。第二，第一个 Full 层依然要完成一次全范围扫描，所以并非所有索引都变成常数成本。它做到的是：候选池大小固定后，后续 indexer 对单个 query 的评分量不再随上下文长度增长。第三，这套候选限制在 post-training 和推理阶段保持一致，不是部署时临时硬剪出来的。
 
-## 我的判断：这不是单点压缩，而是重新分配责任
+## 把几笔账放回一张图里
 
-CED 和 CSA2 放在一起看，逻辑其实很统一。
+CED 和 CSA2 处理的是同一条成本链上的不同位置。
 
-CED 问的是：历史 token 的深层计算，真的要在 prefill 时逐层重做吗？答案是，全局状态可以由固定 encoder states 提供，decoder 只保留生成时需要的深层处理与局部 replay。
+CED 先看历史 token 的深层计算。全局状态由固定的 encoder states 提供，decoder 留下生成阶段的深层处理，以及固定窗口内的局部 replay。这样，长 prompt 的主体从 40 层缩到前 20 层。
 
-CSA2 问的是：每一层真的都要拥有独立的全局 KV，并重新做一次稀疏选择吗？答案是，缓存可以共享，选择可以按需更新，连更新时的搜索域也可以逐级缩小。
+CSA2 再看每层的全局状态和稀疏选择。Main KV 可以跨层共享，Top-K 可以按层重新选择，也可以直接复用。需要重选时，后续层还可以只在固定候选池里搜索。
 
-代价也很明确：系统开始依赖“固定的 encoder states 足够支撑 decoder 全局 KV”“浅层候选池不会漏掉深层真正需要的位置”“有限 SWA replay 足够恢复局部状态”这些结构性假设。论文报告性能可与基线相当，但这些边界仍值得在超长、多轮、频繁工具调用的真实 Agent 负载里继续观察。
+代价同样清楚。这套设计依赖几个结构性假设：固定 encoder states 足以支撑 decoder 的全局 KV；浅层给出的候选池不会漏掉深层真正需要的位置；有限的 SWA replay 足以恢复局部状态。论文报告的性能与基线相当，但在超长、多轮、频繁工具调用的真实 Agent 负载里，这些边界仍值得继续观察。
 
-不过从工程方向看，我认为它比单纯追求更激进的稀疏率更有启发。长上下文的成本不是一个数字，而是 prefill、HBM、SSD、带宽和索引计算共同形成的链条。CED 与 CSA2 的价值，正是把这条链上的责任重新分配了一遍。
+从工程角度看，这比单独追求更高稀疏率更有意思。长上下文成本分散在 prefill、HBM、SSD、带宽和索引计算上。CED 与 CSA2 做的事情，是重新安排每一段由谁计算、保存和复用。
 
 下一篇继续看 SWA Bounded Replay：为什么只重放一个窗口，就能把持久化 KV 再压到 V4-Flash 的约八分之一。
