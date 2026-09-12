@@ -102,5 +102,5 @@ theme: butterfly
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
-  repo: https://github.com/dxyang42/dxyang42.github.io.git
+  repo: git@github.com:dxyang42/dxyang42.github.io.git
   branch: master
